@@ -3,7 +3,7 @@
 
 ## Results
 
-- [Intel Core i7-7820X](https://ark.intel.com/products/123767) with DDR4-2133 memory and [glibc 2.29](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/multiarch/strlen-avx2.S;h=3e7f14a84603ad5284c443fb0ae157ac99afb1e4;hb=56c86f5dd516284558e106d04b92875d5b623b7a)
+- [Intel Core i7-7820X](https://ark.intel.com/products/123767) with 4-ch DDR4-2133 memory and [glibc 2.29](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/multiarch/strlen-avx2.S;h=3e7f14a84603ad5284c443fb0ae157ac99afb1e4;hb=56c86f5dd516284558e106d04b92875d5b623b7a)
 ```
 String length: 128 MiB
 strlen_lib                               : 1.130776e+00 [s], 8.834190e-03 [s], 1.519299e+10 [char/s]
@@ -26,7 +26,7 @@ my_strlen_AVX512_unroll_2                : 1.346073e-01 [s], 8.412954e-03 [s], 1
 my_strlen_AVX512_unroll_4                : 1.356002e-01 [s], 8.475010e-03 [s], 1.583688e+10 [char/s]
 ```
 
-- [Intel Core m3-7Y32](https://ark.intel.com/products/97538) with LPDDR3-1866 memory and [Apple Libc 1244.50.9](https://opensource.apple.com/source/Libc/Libc-1244.50.9/x86_64/string/strlen.s.auto.html)
+- [Intel Core m3-7Y32](https://ark.intel.com/products/97538) with 2-ch(?) LPDDR3-1866 memory and [Apple Libc 1244.50.9](https://opensource.apple.com/source/Libc/Libc-1244.50.9/x86_64/string/strlen.s.auto.html)
 ```
 String length: 128 MiB
 strlen_lib                               : 1.219696e+00 [s], 9.528874e-03 [s], 1.408537e+10 [char/s]
