@@ -606,8 +606,10 @@ int main(void)
     DO(my_strlen_AVX2_vpmovmskb_unroll_2, 16);
     DO(my_strlen_AVX2_vpmovmskb_unroll_4, 16);
     DO(my_strlen_AVX2_vpmovmskb_unroll_8, 16);
+#ifdef __AVX512BW__
     DO(my_strlen_AVX512_unroll_2, 16);
     DO(my_strlen_AVX512_unroll_4, 16);
+#endif /* __AVX512BW__ */
 
     free(s);
     return 0;
