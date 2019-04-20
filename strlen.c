@@ -113,12 +113,7 @@ size_t my_strlen_SSE(const char *s)
         if (_mm_cmpistrs(*p, *p, _SIDD_UBYTE_OPS))
             break;
 
-    s = (const char*) p;
-    for (size_t i = 0; i < (128/8); i ++)
-        if (s[i] == '\0')
-            return c * (128/8) + i;
-
-    printf_abort("Null character is not found\n");
+    return c * (128/8) + find_null_char((const char*) p, 128/8);
 }
 
 static
@@ -137,14 +132,11 @@ size_t my_strlen_SSE_unroll_4(const char *s)
         if (res0 || res1 || res2 || res3)
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (128/8) * UNROLL);
-    for (size_t i = 0; i < (128/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (128/8) * UNROLL + i;
+
+    return c * (128/8) * UNROLL
+        + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 static
@@ -167,14 +159,11 @@ size_t my_strlen_SSE_unroll_8(const char *s)
         if (res0 || res1 || res2 || res3 || res4 || res5 || res6 || res7)
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (128/8) * UNROLL);
-    for (size_t i = 0; i < (128/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (128/8) * UNROLL + i;
+
+    return c * (128/8) * UNROLL
+        + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 static
@@ -206,14 +195,11 @@ size_t my_strlen_SSE_unroll_16(const char *s)
                 || res8 || res9 || resa || resb || resc || resd || rese || resf)
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (128/8) * UNROLL);
-    for (size_t i = 0; i < (128/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (128/8) * UNROLL + i;
+
+    return c * (128/8) * UNROLL
+        + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 static
@@ -236,14 +222,11 @@ size_t my_strlen_SSE_unroll_4_separate_load_cmp(const char *s)
         if (res0 || res1 || res2 || res3)
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (128/8) * UNROLL);
-    for (size_t i = 0; i < (128/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (128/8) * UNROLL + i;
+
+    return c * (128/8) * UNROLL
+        + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 static
@@ -274,14 +257,11 @@ size_t my_strlen_SSE_unroll_8_separate_load_cmp(const char *s)
         if (res0 || res1 || res2 || res3 || res4 || res5 || res6 || res7)
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (128/8) * UNROLL);
-    for (size_t i = 0; i < (128/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (128/8) * UNROLL + i;
+
+    return c * (128/8) * UNROLL
+        + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 static
@@ -329,14 +309,11 @@ size_t my_strlen_SSE_unroll_16_separate_load_cmp(const char *s)
                 || res8 || res9 || resa || resb || resc || resd || rese || resf)
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (128/8) * UNROLL);
-    for (size_t i = 0; i < (128/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (128/8) * UNROLL + i;
+
+    return c * (128/8) * UNROLL
+        + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 size_t my_strlen_AVX2_vptest_unroll_2(const char *s)
@@ -354,14 +331,11 @@ size_t my_strlen_AVX2_vptest_unroll_2(const char *s)
         if (!_mm256_testz_si256(cmp, cmp))
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (256/8) * UNROLL);
-    for (size_t i = 0; i < (256/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (256/8) * UNROLL + i;
+
+    return c * (256/8) * UNROLL
+        + find_null_char((const char*) p, (256/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 size_t my_strlen_AVX2_vptest_unroll_4(const char *s)
@@ -381,14 +355,11 @@ size_t my_strlen_AVX2_vptest_unroll_4(const char *s)
         if (!_mm256_testz_si256(cmp, cmp))
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (256/8) * UNROLL);
-    for (size_t i = 0; i < (256/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (256/8) * UNROLL + i;
+
+    return c * (256/8) * UNROLL
+        + find_null_char((const char*) p, (256/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 size_t my_strlen_AVX2_vptest_unroll_8(const char *s)
@@ -412,14 +383,11 @@ size_t my_strlen_AVX2_vptest_unroll_8(const char *s)
         if (!_mm256_testz_si256(cmp, cmp))
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (256/8) * UNROLL);
-    for (size_t i = 0; i < (256/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (256/8) * UNROLL + i;
+
+    return c * (256/8) * UNROLL
+        + find_null_char((const char*) p, (256/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 size_t my_strlen_AVX2_vpmovmskb_unroll_2(const char *s)
@@ -437,14 +405,11 @@ size_t my_strlen_AVX2_vpmovmskb_unroll_2(const char *s)
         if (_mm256_movemask_epi8(cmp))
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (256/8) * UNROLL);
-    for (size_t i = 0; i < (256/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (256/8) * UNROLL + i;
+
+    return c * (256/8) * UNROLL
+        + find_null_char((const char*) p, (256/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 size_t my_strlen_AVX2_vpmovmskb_unroll_4(const char *s)
@@ -464,14 +429,11 @@ size_t my_strlen_AVX2_vpmovmskb_unroll_4(const char *s)
         if (_mm256_movemask_epi8(cmp))
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (256/8) * UNROLL);
-    for (size_t i = 0; i < (256/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (256/8) * UNROLL + i;
+
+    return c * (256/8) * UNROLL
+        + find_null_char((const char*) p, (256/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 size_t my_strlen_AVX2_vpmovmskb_unroll_8(const char *s)
@@ -495,14 +457,11 @@ size_t my_strlen_AVX2_vpmovmskb_unroll_8(const char *s)
         if (_mm256_movemask_epi8(cmp))
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (256/8) * UNROLL);
-    for (size_t i = 0; i < (256/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (256/8) * UNROLL + i;
+
+    return c * (256/8) * UNROLL
+        + find_null_char((const char*) p, (256/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 #ifdef __AVX512BW__
@@ -522,14 +481,11 @@ size_t my_strlen_AVX512_vpcmpeqb_unroll_2(const char *s)
         if (!_ktestz_mask64_u8(cmp, cmp))
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (512/8) * UNROLL);
-    for (size_t i = 0; i < (512/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (512/8) * UNROLL + i;
+
+    return c * (512/8) * UNROLL
+        + find_null_char((const char*) p, (512/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 size_t my_strlen_AVX512_vpcmpeqb_unroll_4(const char *s)
@@ -548,14 +504,11 @@ size_t my_strlen_AVX512_vpcmpeqb_unroll_4(const char *s)
         if (!_ktestz_mask64_u8(cmp, cmp))
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (512/8) * UNROLL);
-    for (size_t i = 0; i < (512/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (512/8) * UNROLL + i;
+
+    return c * (512/8) * UNROLL
+        + find_null_char((const char*) p, (512/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 size_t my_strlen_AVX512_vptestnmb_unroll_2(const char *s)
@@ -572,14 +525,11 @@ size_t my_strlen_AVX512_vptestnmb_unroll_2(const char *s)
         if (!_ktestz_mask64_u8(cmp, cmp))
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (512/8) * UNROLL);
-    for (size_t i = 0; i < (512/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (512/8) * UNROLL + i;
+
+    return c * (512/8) * UNROLL
+        + find_null_char((const char*) p, (512/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 size_t my_strlen_AVX512_vptestnmb_unroll_4(const char *s)
@@ -597,14 +547,11 @@ size_t my_strlen_AVX512_vptestnmb_unroll_4(const char *s)
         if (!_ktestz_mask64_u8(cmp, cmp))
             break;
     }
-    s = (const char*) __builtin_assume_aligned(p, (512/8) * UNROLL);
-    for (size_t i = 0; i < (512/8) * UNROLL; i ++)
-        if (s[i] == '\0')
-            return c * (512/8) * UNROLL + i;
+
+    return c * (512/8) * UNROLL
+        + find_null_char((const char*) p, (512/8) * UNROLL);
 
 #undef UNROLL
-
-    printf_abort("Null character is not found\n");
 }
 
 #endif /* __AVX512BW__ */
