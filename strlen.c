@@ -489,7 +489,7 @@ size_t my_strlen_AVX2_vpmovmskb_unroll_8(const char *s)
 
 #ifdef __AVX512BW__
 
-size_t my_strlen_AVX512_unroll_2(const char *s)
+size_t my_strlen_AVX512_vpcmpeqb_unroll_2(const char *s)
 {
     /* Must be less than or equal to 4096 / (512/8) = 64. */
 #define UNROLL 2
@@ -499,6 +499,7 @@ size_t my_strlen_AVX512_unroll_2(const char *s)
     size_t c = 0;
     for (; ; p += UNROLL, c++) {
         __m512i tmp = _mm512_min_epu8(p[0], p[1]);
+        /* vpcmpeqb: equal => 1, not equal => 0 */
         const __mmask64 cmp = _mm512_cmpeq_epi8_mask(tmp, zero);
         if (!_ktestz_mask64_u8(cmp, cmp))
             break;
@@ -513,7 +514,7 @@ size_t my_strlen_AVX512_unroll_2(const char *s)
     printf_abort("Null character is not found\n");
 }
 
-size_t my_strlen_AVX512_unroll_4(const char *s)
+size_t my_strlen_AVX512_vpcmpeqb_unroll_4(const char *s)
 {
     /* Must be less than or equal to 4096 / (512/8) = 64. */
 #define UNROLL 4
@@ -526,6 +527,55 @@ size_t my_strlen_AVX512_unroll_4(const char *s)
         register const __m512i tmp23 = _mm512_min_epu8(p[2], p[3]);
         register const __m512i tmp0123 = _mm512_min_epu8(tmp01, tmp23);
         const __mmask64 cmp = _mm512_cmpeq_epi8_mask(zero, tmp0123);
+        if (!_ktestz_mask64_u8(cmp, cmp))
+            break;
+    }
+    s = (const char*) __builtin_assume_aligned(p, (512/8) * UNROLL);
+    for (size_t i = 0; i < (512/8) * UNROLL; i ++)
+        if (s[i] == '\0')
+            return c * (512/8) * UNROLL + i;
+
+#undef UNROLL
+
+    printf_abort("Null character is not found\n");
+}
+
+size_t my_strlen_AVX512_vptestnmb_unroll_2(const char *s)
+{
+    /* Must be less than or equal to 4096 / (512/8) = 64. */
+#define UNROLL 2
+
+    __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    size_t c = 0;
+    for (; ; p += UNROLL, c++) {
+        __m512i tmp = _mm512_min_epu8(p[0], p[1]);
+        /* 0x00 => 1, others => 0 */
+        const __mmask64 cmp = _mm512_testn_epi8_mask(tmp, tmp);
+        if (!_ktestz_mask64_u8(cmp, cmp))
+            break;
+    }
+    s = (const char*) __builtin_assume_aligned(p, (512/8) * UNROLL);
+    for (size_t i = 0; i < (512/8) * UNROLL; i ++)
+        if (s[i] == '\0')
+            return c * (512/8) * UNROLL + i;
+
+#undef UNROLL
+
+    printf_abort("Null character is not found\n");
+}
+
+size_t my_strlen_AVX512_vptestnmb_unroll_4(const char *s)
+{
+    /* Must be less than or equal to 4096 / (512/8) = 64. */
+#define UNROLL 4
+
+    __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    size_t c = 0;
+    for (; ; p += UNROLL, c++) {
+        register const __m512i tmp01 = _mm512_min_epu8(p[0], p[1]);
+        register const __m512i tmp23 = _mm512_min_epu8(p[2], p[3]);
+        register const __m512i tmp0123 = _mm512_min_epu8(tmp01, tmp23);
+        const __mmask64 cmp = _mm512_testn_epi8_mask(tmp0123, tmp0123);
         if (!_ktestz_mask64_u8(cmp, cmp))
             break;
     }
@@ -607,8 +657,10 @@ int main(void)
     DO(my_strlen_AVX2_vpmovmskb_unroll_4, 16);
     DO(my_strlen_AVX2_vpmovmskb_unroll_8, 16);
 #ifdef __AVX512BW__
-    DO(my_strlen_AVX512_unroll_2, 16);
-    DO(my_strlen_AVX512_unroll_4, 16);
+    DO(my_strlen_AVX512_vpcmpeqb_unroll_2, 16);
+    DO(my_strlen_AVX512_vpcmpeqb_unroll_4, 16);
+    DO(my_strlen_AVX512_vptestnmb_unroll_2, 16);
+    DO(my_strlen_AVX512_vptestnmb_unroll_4, 16);
 #endif /* __AVX512BW__ */
 
     free(s);
