@@ -1,3 +1,21 @@
+/*
+ * According to agner.org and uops.info:
+ * |------------------------+--------------------+-------------+-----+-----+-------|
+ * | Intrin                 | Insn               | Conformance | lat | th  | port  |
+ * |------------------------+--------------------+-------------+-----+-----+-------|
+ * | _mm_cmpistrs           | pcmpistri x, x, i8 | SSE4.2      | 10  | 3   | 3p0   |
+ * | _mm256_min_epu8        | vpminub y, y, y    | AVX2        | 1   | 0.5 | p01   |
+ * | _mm256_cmpeq_epi8      | vpcmpeqb y, y, y   | AVX2        | 1   | 0.5 | p01   |
+ * | _mm256_testz_si256     | vptest y, y        | AVX         | 3   | 1   | p0 p5 |
+ * | _mm256_movemask_epi8   | vpmovmskb r32, y   | AVX2        | 2-3 | 1   | p0    |
+ * | _mm512_min_epu8        | vpminub z, z, z    | AVX512BW    | 1   | 1   | p0    |
+ * | _mm512_cmpeq_epi8      | vpcmpeqb k, z, z   | AVX512BW    | 3   | 1   | p5    |
+ * | _mm512_cmpeq_epi8_mask | vpcmpb k, z, z, i8 | AVX512BW    | 3   | 1   | p5    |
+ * | _mm512_testn_epi8_mask | vptestnmb k, z, z  | AVX512BW    | 3   | 1   | p5    |
+ * | _ktestz_mask64_u8      | ktestq k, k        | AVX512BW    | 2   | 1   | p0    |
+ * |------------------------+--------------------+-------------+-----+-----+-------|
+ */
+
 #include <immintrin.h>
 #include <stdint.h>
 #include <stdio.h>
