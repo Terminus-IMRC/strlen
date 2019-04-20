@@ -67,6 +67,7 @@ size_t find_null_char(const char *s, const size_t len)
     printf_abort("Null character is not found\n");
 }
 
+static
 size_t strlen_lib(const char * volatile const s)
 {
     return strlen(s);
@@ -316,6 +317,7 @@ size_t my_strlen_SSE_unroll_16_separate_load_cmp(const char *s)
 #undef UNROLL
 }
 
+static
 size_t my_strlen_AVX2_vptest_unroll_2(const char *s)
 {
     /* Must be less than or equal to 4096 / (256/8) = 128. */
@@ -338,6 +340,7 @@ size_t my_strlen_AVX2_vptest_unroll_2(const char *s)
 #undef UNROLL
 }
 
+static
 size_t my_strlen_AVX2_vptest_unroll_4(const char *s)
 {
     /* Must be less than or equal to 4096 / (256/8) = 128. */
@@ -362,6 +365,7 @@ size_t my_strlen_AVX2_vptest_unroll_4(const char *s)
 #undef UNROLL
 }
 
+static
 size_t my_strlen_AVX2_vptest_unroll_8(const char *s)
 {
     /* Must be less than or equal to 4096 / (256/8) = 128. */
@@ -390,6 +394,7 @@ size_t my_strlen_AVX2_vptest_unroll_8(const char *s)
 #undef UNROLL
 }
 
+static
 size_t my_strlen_AVX2_vpmovmskb_unroll_2(const char *s)
 {
     /* Must be less than or equal to 4096 / (256/8) = 128. */
@@ -412,6 +417,7 @@ size_t my_strlen_AVX2_vpmovmskb_unroll_2(const char *s)
 #undef UNROLL
 }
 
+static
 size_t my_strlen_AVX2_vpmovmskb_unroll_4(const char *s)
 {
     /* Must be less than or equal to 4096 / (256/8) = 128. */
@@ -436,6 +442,7 @@ size_t my_strlen_AVX2_vpmovmskb_unroll_4(const char *s)
 #undef UNROLL
 }
 
+static
 size_t my_strlen_AVX2_vpmovmskb_unroll_8(const char *s)
 {
     /* Must be less than or equal to 4096 / (256/8) = 128. */
@@ -466,6 +473,7 @@ size_t my_strlen_AVX2_vpmovmskb_unroll_8(const char *s)
 
 #ifdef __AVX512BW__
 
+static
 size_t my_strlen_AVX512_vpcmpeqb_unroll_2(const char *s)
 {
     /* Must be less than or equal to 4096 / (512/8) = 64. */
@@ -488,6 +496,7 @@ size_t my_strlen_AVX512_vpcmpeqb_unroll_2(const char *s)
 #undef UNROLL
 }
 
+static
 size_t my_strlen_AVX512_vpcmpeqb_unroll_4(const char *s)
 {
     /* Must be less than or equal to 4096 / (512/8) = 64. */
@@ -511,6 +520,7 @@ size_t my_strlen_AVX512_vpcmpeqb_unroll_4(const char *s)
 #undef UNROLL
 }
 
+static
 size_t my_strlen_AVX512_vptestnmb_unroll_2(const char *s)
 {
     /* Must be less than or equal to 4096 / (512/8) = 64. */
@@ -532,6 +542,7 @@ size_t my_strlen_AVX512_vptestnmb_unroll_2(const char *s)
 #undef UNROLL
 }
 
+static
 size_t my_strlen_AVX512_vptestnmb_unroll_4(const char *s)
 {
     /* Must be less than or equal to 4096 / (512/8) = 64. */
