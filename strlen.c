@@ -27,6 +27,11 @@
 #include <time.h>
 
 #define barrier() __asm__ volatile ("" : : : "memory")
+/*
+ * Avoid code elimination of read-only access on ptr.
+ * c.f. https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/include/linux/compiler-gcc.h
+ */
+#define barrier_data(ptr) __asm__ volatile ("" : : "r" (ptr) : "memory")
 #define likely(x) __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
 #define __aligned(x) __attribute__((__aligned__(x)))
@@ -65,12 +70,6 @@ size_t find_null_char(const char *s, const size_t len)
         if (s[i] == '\0')
             return i;
     printf_abort("Null character is not found\n");
-}
-
-static
-size_t strlen_lib(const char * volatile const s)
-{
-    return strlen(s);
 }
 
 static
@@ -576,7 +575,7 @@ size_t my_strlen_AVX512_vptestnmb_unroll_4(const char *s)
 #endif /* __AVX512BW__ */
 
 static
-void bench_strlen(const char * const s, const size_t len_expected,
+void bench_strlen(char * const s, const size_t len_expected,
         size_t (*mystrlen)(const char *s), const unsigned repetition)
 {
     /* Warmup */
@@ -590,6 +589,7 @@ void bench_strlen(const char * const s, const size_t len_expected,
     double start = getsec();
     barrier();
     for (unsigned i = 0; i < repetition; i ++) {
+        barrier_data(s);
         const size_t len = mystrlen(s);
         if (unlikely(len != len_expected))
             printf_abort("len(%zu) is not expected(%zu)\n", len, len_expected);
@@ -624,7 +624,7 @@ int main(void)
         bench_strlen(s, len-1, func, repetition); \
     } while (0)
 
-    DO(strlen_lib, 128);
+    DO(strlen, 128);
     DO(my_strlen_pure, 32);
     DO(my_strlen_rep, 8);
 
