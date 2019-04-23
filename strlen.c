@@ -832,6 +832,7 @@ int main(void)
     if (err)
         pprintf_abort("posix_memalign");
 
+    s = __builtin_assume_aligned(s, PAGE_SIZE);
     (void) memset(s, 0x55, len - 1);
     s[len - 1] = '\0';
 
