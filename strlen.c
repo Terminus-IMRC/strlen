@@ -105,6 +105,8 @@ size_t my_strlen_rep(const char * const s)
     return ~c - 1;
 }
 
+#ifdef __SSE4_2__
+
 static
 size_t my_strlen_SSE(const char *s)
 {
@@ -317,6 +319,10 @@ size_t my_strlen_SSE_unroll_16_separate_load_cmp(const char *s)
 #undef UNROLL
 }
 
+#endif /* __SSE4_2__ */
+
+#ifdef __AVX2__
+
 static
 size_t my_strlen_AVX2_vptest_unroll_2(const char *s)
 {
@@ -471,6 +477,8 @@ size_t my_strlen_AVX2_vpmovmskb_unroll_8(const char *s)
 #undef UNROLL
 }
 
+#endif /* __AVX2__ */
+
 #ifdef __AVX512BW__
 
 static
@@ -619,6 +627,8 @@ int main(void)
     DO(strlen_lib, 128);
     DO(my_strlen_pure, 32);
     DO(my_strlen_rep, 8);
+
+#ifdef __SSE4_2__
     DO(my_strlen_SSE, 128);
     DO(my_strlen_SSE_unroll_4, 128);
     DO(my_strlen_SSE_unroll_8, 128);
@@ -626,12 +636,17 @@ int main(void)
     DO(my_strlen_SSE_unroll_4_separate_load_cmp, 128);
     DO(my_strlen_SSE_unroll_8_separate_load_cmp, 128);
     DO(my_strlen_SSE_unroll_16_separate_load_cmp, 128);
+#endif /* __SSE4_2__ */
+
+#ifdef __AVX2__
     DO(my_strlen_AVX2_vptest_unroll_2, 128);
     DO(my_strlen_AVX2_vptest_unroll_4, 128);
     DO(my_strlen_AVX2_vptest_unroll_8, 128);
     DO(my_strlen_AVX2_vpmovmskb_unroll_2, 128);
     DO(my_strlen_AVX2_vpmovmskb_unroll_4, 128);
     DO(my_strlen_AVX2_vpmovmskb_unroll_8, 128);
+#endif /* __AVX2__ */
+
 #ifdef __AVX512BW__
     DO(my_strlen_AVX512_vpcmpeqb_unroll_2, 128);
     DO(my_strlen_AVX512_vpcmpeqb_unroll_4, 128);
