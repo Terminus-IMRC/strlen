@@ -539,30 +539,6 @@ size_t my_strlen_AVX512_vpcmpeqb_unroll_2(const char * const s)
 }
 
 static
-size_t my_strlen_AVX512_vpcmpeqb_unroll_4(const char * const s)
-{
-    /* Must be less than or equal to 4096 / (512/8) = 64. */
-#define UNROLL 4
-
-    const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
-        const __m512i tmp01 = _mm512_min_epu8(p[0], p[1]);
-        const __m512i tmp23 = _mm512_min_epu8(p[2], p[3]);
-        const __m512i tmp0123 = _mm512_min_epu8(tmp01, tmp23);
-        const __mmask64 cmp = _mm512_cmpeq_epi8_mask(tmp0123,
-                _mm512_setzero_si512());
-        if (!_ktestz_mask64_u8(cmp, cmp))
-            break;
-    }
-
-    return c * (512/8) * UNROLL
-        + find_null_char((const char*) p, (512/8) * UNROLL);
-
-#undef UNROLL
-}
-
-static
 size_t my_strlen_AVX512_vptestnmb_unroll_2(const char * const s)
 {
     /* Must be less than or equal to 4096 / (512/8) = 64. */
@@ -597,6 +573,211 @@ size_t my_strlen_AVX512_vptestnmb_unroll_4(const char * const s)
         const __m512i tmp23 = _mm512_min_epu8(p[2], p[3]);
         const __m512i tmp0123 = _mm512_min_epu8(tmp01, tmp23);
         const __mmask64 cmp = _mm512_testn_epi8_mask(tmp0123, tmp0123);
+        if (!_ktestz_mask64_u8(cmp, cmp))
+            break;
+    }
+
+    return c * (512/8) * UNROLL
+        + find_null_char((const char*) p, (512/8) * UNROLL);
+
+#undef UNROLL
+}
+
+static
+size_t my_strlen_AVX512_vptestnmb_unroll_8(const char * const s)
+{
+    /* Must be less than or equal to 4096 / (512/8) = 64. */
+#define UNROLL 8
+
+    const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    size_t c = 0;
+    for (; ; p += UNROLL, c++) {
+        const __m512i tmp01 = _mm512_min_epu8(p[0], p[1]);
+        const __m512i tmp23 = _mm512_min_epu8(p[2], p[3]);
+        const __m512i tmp45 = _mm512_min_epu8(p[4], p[5]);
+        const __m512i tmp67 = _mm512_min_epu8(p[6], p[7]);
+        const __m512i tmp0123 = _mm512_min_epu8(tmp01, tmp23);
+        const __m512i tmp4567 = _mm512_min_epu8(tmp45, tmp67);
+        const __m512i tmp01234567 = _mm512_min_epu8(tmp0123, tmp4567);
+        const __mmask64 cmp = _mm512_testn_epi8_mask(tmp01234567, tmp01234567);
+        if (!_ktestz_mask64_u8(cmp, cmp))
+            break;
+    }
+
+    return c * (512/8) * UNROLL
+        + find_null_char((const char*) p, (512/8) * UNROLL);
+
+#undef UNROLL
+}
+
+/* It's a hell. */
+
+static
+size_t my_strlen_AVX512_vptestnmb_unroll_16(const char * const s)
+{
+    /* Must be less than or equal to 4096 / (512/8) = 64. */
+#define UNROLL 16
+
+    const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    size_t c = 0;
+    for (; ; p += UNROLL, c++) {
+        const __m512i tmp01 = _mm512_min_epu8(p[0], p[1]);
+        const __m512i tmp23 = _mm512_min_epu8(p[2], p[3]);
+        const __m512i tmp45 = _mm512_min_epu8(p[4], p[5]);
+        const __m512i tmp67 = _mm512_min_epu8(p[6], p[7]);
+        const __m512i tmp89 = _mm512_min_epu8(p[8], p[9]);
+        const __m512i tmpab = _mm512_min_epu8(p[10], p[11]);
+        const __m512i tmpcd = _mm512_min_epu8(p[12], p[13]);
+        const __m512i tmpef = _mm512_min_epu8(p[14], p[15]);
+        const __m512i tmp0123 = _mm512_min_epu8(tmp01, tmp23);
+        const __m512i tmp4567 = _mm512_min_epu8(tmp45, tmp67);
+        const __m512i tmp89ab = _mm512_min_epu8(tmp89, tmpab);
+        const __m512i tmpcdef = _mm512_min_epu8(tmpcd, tmpef);
+        const __m512i tmp01234567 = _mm512_min_epu8(tmp0123, tmp4567);
+        const __m512i tmp89abcdef = _mm512_min_epu8(tmp89ab, tmpcdef);
+        const __m512i tmp0123456789abcdef = _mm512_min_epu8(tmp01234567,
+                tmp89abcdef);
+        const __mmask64 cmp = _mm512_testn_epi8_mask(tmp0123456789abcdef,
+                tmp0123456789abcdef);
+        if (!_ktestz_mask64_u8(cmp, cmp))
+            break;
+    }
+
+    return c * (512/8) * UNROLL
+        + find_null_char((const char*) p, (512/8) * UNROLL);
+
+#undef UNROLL
+}
+
+static
+size_t my_strlen_AVX512_vptestnmb_unroll_2_stream_both(const char * const s)
+{
+    /* Must be less than or equal to 4096 / (512/8) = 64. */
+#define UNROLL 2
+
+    const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    size_t c = 0;
+    for (; ; p += UNROLL, c++) {
+        const __m512i v0 = _mm512_stream_load_si512(p + 0);
+        const __m512i v1 = _mm512_stream_load_si512(p + 1);
+        const __m512i tmp = _mm512_min_epu8(v0, v1);
+        /* 0x00 => 1, others => 0 */
+        const __mmask64 cmp = _mm512_testn_epi8_mask(tmp, tmp);
+        if (!_ktestz_mask64_u8(cmp, cmp))
+            break;
+    }
+
+    return c * (512/8) * UNROLL
+        + find_null_char((const char*) p, (512/8) * UNROLL);
+
+#undef UNROLL
+}
+
+static
+size_t my_strlen_AVX512_vptestnmb_unroll_4_stream_both(const char * const s)
+{
+    /* Must be less than or equal to 4096 / (512/8) = 64. */
+#define UNROLL 4
+
+    const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    size_t c = 0;
+    for (; ; p += UNROLL, c++) {
+        const __m512i v0 = _mm512_stream_load_si512(p + 0);
+        const __m512i v1 = _mm512_stream_load_si512(p + 1);
+        const __m512i v2 = _mm512_stream_load_si512(p + 2);
+        const __m512i v3 = _mm512_stream_load_si512(p + 3);
+        const __m512i tmp01 = _mm512_min_epu8(v0, v1);
+        const __m512i tmp23 = _mm512_min_epu8(v2, v3);
+        const __m512i tmp0123 = _mm512_min_epu8(tmp01, tmp23);
+        const __mmask64 cmp = _mm512_testn_epi8_mask(tmp0123, tmp0123);
+        if (!_ktestz_mask64_u8(cmp, cmp))
+            break;
+    }
+
+    return c * (512/8) * UNROLL
+        + find_null_char((const char*) p, (512/8) * UNROLL);
+
+#undef UNROLL
+}
+
+static
+size_t my_strlen_AVX512_vptestnmb_unroll_8_stream_both(const char * const s)
+{
+    /* Must be less than or equal to 4096 / (512/8) = 64. */
+#define UNROLL 8
+
+    const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    size_t c = 0;
+    for (; ; p += UNROLL, c++) {
+        const __m512i v0 = _mm512_stream_load_si512(p + 0);
+        const __m512i v1 = _mm512_stream_load_si512(p + 1);
+        const __m512i v2 = _mm512_stream_load_si512(p + 2);
+        const __m512i v3 = _mm512_stream_load_si512(p + 3);
+        const __m512i v4 = _mm512_stream_load_si512(p + 4);
+        const __m512i v5 = _mm512_stream_load_si512(p + 5);
+        const __m512i v6 = _mm512_stream_load_si512(p + 6);
+        const __m512i v7 = _mm512_stream_load_si512(p + 7);
+        const __m512i tmp01 = _mm512_min_epu8(v0, v1);
+        const __m512i tmp23 = _mm512_min_epu8(v2, v3);
+        const __m512i tmp45 = _mm512_min_epu8(v4, v5);
+        const __m512i tmp67 = _mm512_min_epu8(v6, v7);
+        const __m512i tmp0123 = _mm512_min_epu8(tmp01, tmp23);
+        const __m512i tmp4567 = _mm512_min_epu8(tmp45, tmp67);
+        const __m512i tmp01234567 = _mm512_min_epu8(tmp0123, tmp4567);
+        const __mmask64 cmp = _mm512_testn_epi8_mask(tmp01234567, tmp01234567);
+        if (!_ktestz_mask64_u8(cmp, cmp))
+            break;
+    }
+
+    return c * (512/8) * UNROLL
+        + find_null_char((const char*) p, (512/8) * UNROLL);
+
+#undef UNROLL
+}
+
+static
+size_t my_strlen_AVX512_vptestnmb_unroll_16_stream_both(const char * const s)
+{
+    /* Must be less than or equal to 4096 / (512/8) = 64. */
+#define UNROLL 16
+
+    const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    size_t c = 0;
+    for (; ; p += UNROLL, c++) {
+        const __m512i v0 = _mm512_stream_load_si512(p + 0);
+        const __m512i v1 = _mm512_stream_load_si512(p + 1);
+        const __m512i v2 = _mm512_stream_load_si512(p + 2);
+        const __m512i v3 = _mm512_stream_load_si512(p + 3);
+        const __m512i v4 = _mm512_stream_load_si512(p + 4);
+        const __m512i v5 = _mm512_stream_load_si512(p + 5);
+        const __m512i v6 = _mm512_stream_load_si512(p + 6);
+        const __m512i v7 = _mm512_stream_load_si512(p + 7);
+        const __m512i v8 = _mm512_stream_load_si512(p + 8);
+        const __m512i v9 = _mm512_stream_load_si512(p + 9);
+        const __m512i va = _mm512_stream_load_si512(p + 10);
+        const __m512i vb = _mm512_stream_load_si512(p + 11);
+        const __m512i vc = _mm512_stream_load_si512(p + 12);
+        const __m512i vd = _mm512_stream_load_si512(p + 13);
+        const __m512i ve = _mm512_stream_load_si512(p + 14);
+        const __m512i vf = _mm512_stream_load_si512(p + 15);
+        const __m512i tmp01 = _mm512_min_epu8(v0, v1);
+        const __m512i tmp23 = _mm512_min_epu8(v2, v3);
+        const __m512i tmp45 = _mm512_min_epu8(v4, v5);
+        const __m512i tmp67 = _mm512_min_epu8(v6, v7);
+        const __m512i tmp89 = _mm512_min_epu8(v8, v9);
+        const __m512i tmpab = _mm512_min_epu8(va, vb);
+        const __m512i tmpcd = _mm512_min_epu8(vc, vd);
+        const __m512i tmpef = _mm512_min_epu8(ve, vf);
+        const __m512i tmp0123 = _mm512_min_epu8(tmp01, tmp23);
+        const __m512i tmp4567 = _mm512_min_epu8(tmp45, tmp67);
+        const __m512i tmp89ab = _mm512_min_epu8(tmp89, tmpab);
+        const __m512i tmpcdef = _mm512_min_epu8(tmpcd, tmpef);
+        const __m512i tmp01234567 = _mm512_min_epu8(tmp0123, tmp4567);
+        const __m512i tmp89abcdef = _mm512_min_epu8(tmp89ab, tmpcdef);
+        const __m512i tmp0123456789abcdef = _mm512_min_epu8(tmp01234567,
+                tmp89abcdef);
+        const __mmask64 cmp = _mm512_testn_epi8_mask(tmp0123456789abcdef,
+                tmp0123456789abcdef);
         if (!_ktestz_mask64_u8(cmp, cmp))
             break;
     }
@@ -656,7 +837,7 @@ int main(void)
 
 #define DO(func, repetition) \
     do { \
-        printf("%-35s: ", #func); \
+        printf("%-48s: ", #func); \
         bench_strlen(s, len-1, func, repetition); \
     } while (0)
 
@@ -686,9 +867,14 @@ int main(void)
 
 #ifdef __AVX512BW__
     DO(my_strlen_AVX512_vpcmpeqb_unroll_2, 128);
-    DO(my_strlen_AVX512_vpcmpeqb_unroll_4, 128);
     DO(my_strlen_AVX512_vptestnmb_unroll_2, 128);
     DO(my_strlen_AVX512_vptestnmb_unroll_4, 128);
+    DO(my_strlen_AVX512_vptestnmb_unroll_8, 128);
+    DO(my_strlen_AVX512_vptestnmb_unroll_16, 128);
+    DO(my_strlen_AVX512_vptestnmb_unroll_2_stream_both, 128);
+    DO(my_strlen_AVX512_vptestnmb_unroll_4_stream_both, 128);
+    DO(my_strlen_AVX512_vptestnmb_unroll_8_stream_both, 128);
+    DO(my_strlen_AVX512_vptestnmb_unroll_16_stream_both, 128);
 #endif /* __AVX512BW__ */
 
     free(s);
