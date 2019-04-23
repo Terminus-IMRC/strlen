@@ -34,7 +34,7 @@
 #define barrier_data(ptr) __asm__ volatile ("" : : "r" (ptr) : "memory")
 #define likely(x) __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
-#define __aligned(x) __attribute__((__aligned__(x)))
+#define __maybe_unused __attribute__((__unused__))
 
 #define pprintf_abort(str, ...) \
     do { \
@@ -64,6 +64,7 @@ double getsec(void)
 }
 
 static inline
+__maybe_unused
 size_t find_null_char(const char *s, const size_t len)
 {
     for (size_t i = 0; i < len; i ++)
