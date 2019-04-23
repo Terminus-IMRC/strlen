@@ -212,7 +212,7 @@ size_t my_strlen_SSE_unroll_4_separate_load_cmp(const char *s)
 #define UNROLL 4
 
     size_t c = 0;
-    const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
     for (; ; p += UNROLL, c++) {
         register __m128i v0 = _mm_stream_load_si128(p + 0);
         register __m128i v1 = _mm_stream_load_si128(p + 1);
@@ -239,7 +239,7 @@ size_t my_strlen_SSE_unroll_8_separate_load_cmp(const char *s)
 #define UNROLL 8
 
     size_t c = 0;
-    const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
     for (; ; p += UNROLL, c++) {
         register __m128i v0 = _mm_stream_load_si128(p + 0);
         register __m128i v1 = _mm_stream_load_si128(p + 1);
@@ -274,7 +274,7 @@ size_t my_strlen_SSE_unroll_16_separate_load_cmp(const char *s)
 #define UNROLL 16
 
     size_t c = 0;
-    const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
     for (; ; p += UNROLL, c++) {
         register __m128i v0 = _mm_stream_load_si128(p + 0);
         register __m128i v1 = _mm_stream_load_si128(p + 1);
