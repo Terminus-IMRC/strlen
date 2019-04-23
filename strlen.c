@@ -221,7 +221,7 @@ size_t my_strlen_SSE_unroll_16(const char * const s)
 }
 
 static
-size_t my_strlen_SSE_unroll_2_separate_load_cmp(const char * const s)
+size_t my_strlen_SSE_unroll_2_stream_both(const char * const s)
 {
     /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 2
@@ -244,7 +244,7 @@ size_t my_strlen_SSE_unroll_2_separate_load_cmp(const char * const s)
 }
 
 static
-size_t my_strlen_SSE_unroll_4_separate_load_cmp(const char * const s)
+size_t my_strlen_SSE_unroll_4_stream_both(const char * const s)
 {
     /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 4
@@ -271,7 +271,7 @@ size_t my_strlen_SSE_unroll_4_separate_load_cmp(const char * const s)
 }
 
 static
-size_t my_strlen_SSE_unroll_8_separate_load_cmp(const char * const s)
+size_t my_strlen_SSE_unroll_8_stream_both(const char * const s)
 {
     /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 8
@@ -306,7 +306,7 @@ size_t my_strlen_SSE_unroll_8_separate_load_cmp(const char * const s)
 }
 
 static
-size_t my_strlen_SSE_unroll_16_separate_load_cmp(const char * const s)
+size_t my_strlen_SSE_unroll_16_stream_both(const char * const s)
 {
     /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 16
@@ -656,7 +656,7 @@ int main(void)
 
 #define DO(func, repetition) \
     do { \
-        printf("%-41s: ", #func); \
+        printf("%-35s: ", #func); \
         bench_strlen(s, len-1, func, repetition); \
     } while (0)
 
@@ -669,10 +669,10 @@ int main(void)
     DO(my_strlen_SSE_unroll_4, 128);
     DO(my_strlen_SSE_unroll_8, 128);
     DO(my_strlen_SSE_unroll_16, 128);
-    DO(my_strlen_SSE_unroll_2_separate_load_cmp, 128);
-    DO(my_strlen_SSE_unroll_4_separate_load_cmp, 128);
-    DO(my_strlen_SSE_unroll_8_separate_load_cmp, 128);
-    DO(my_strlen_SSE_unroll_16_separate_load_cmp, 128);
+    DO(my_strlen_SSE_unroll_2_stream_both, 128);
+    DO(my_strlen_SSE_unroll_4_stream_both, 128);
+    DO(my_strlen_SSE_unroll_8_stream_both, 128);
+    DO(my_strlen_SSE_unroll_16_stream_both, 128);
 #endif /* __SSE4_2__ */
 
 #ifdef __AVX2__
