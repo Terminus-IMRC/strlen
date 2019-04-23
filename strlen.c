@@ -107,16 +107,31 @@ size_t my_strlen_rep(const char * const s)
 
 #ifdef __SSE4_2__
 
+/*
+ * _mm_cmpistr* (pcmpistri xmm1, xmm2/m128, imm8) sets SF if any byte/word of
+ * xmm1 is null, and sets ZF if any byte/word of xmm2/mem128 is null.  SF can be
+ * obtained with _mm_cmpistrs and ZF can be obtained with _mm_cmpistrz.
+ */
+
 static
-size_t my_strlen_SSE(const char * const s)
+size_t my_strlen_SSE_unroll_2(const char * const s)
 {
+    /* Must be less than or equal to 4096 / (128/8) = 256. */
+#define UNROLL 2
+
     size_t c = 0;
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    for (; ; p++, c++)
-        if (_mm_cmpistrs(*p, *p, _SIDD_UBYTE_OPS))
+    for (; ; p += UNROLL, c++) {
+        const int res0 = _mm_cmpistrs(p[0], p[1], _SIDD_UBYTE_OPS);
+        const int res1 = _mm_cmpistrz(p[0], p[1], _SIDD_UBYTE_OPS);
+        if (res0 || res1)
             break;
+    }
 
-    return c * (128/8) + find_null_char((const char*) p, 128/8);
+    return c * (128/8) * UNROLL
+        + find_null_char((const char*) p, (128/8) * UNROLL);
+
+#undef UNROLL
 }
 
 static
@@ -128,10 +143,10 @@ size_t my_strlen_SSE_unroll_4(const char * const s)
     size_t c = 0;
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
     for (; ; p += UNROLL, c++) {
-        const int res0 = _mm_cmpistrs(p[0], p[0], _SIDD_UBYTE_OPS);
-        const int res1 = _mm_cmpistrs(p[1], p[1], _SIDD_UBYTE_OPS);
-        const int res2 = _mm_cmpistrs(p[2], p[2], _SIDD_UBYTE_OPS);
-        const int res3 = _mm_cmpistrs(p[3], p[3], _SIDD_UBYTE_OPS);
+        const int res0 = _mm_cmpistrs(p[0], p[1], _SIDD_UBYTE_OPS);
+        const int res1 = _mm_cmpistrz(p[0], p[1], _SIDD_UBYTE_OPS);
+        const int res2 = _mm_cmpistrs(p[2], p[3], _SIDD_UBYTE_OPS);
+        const int res3 = _mm_cmpistrz(p[2], p[3], _SIDD_UBYTE_OPS);
         if (res0 || res1 || res2 || res3)
             break;
     }
@@ -151,14 +166,14 @@ size_t my_strlen_SSE_unroll_8(const char * const s)
     size_t c = 0;
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
     for (; ; p += UNROLL, c++) {
-        const int res0 = _mm_cmpistrs(p[0], p[0], _SIDD_UBYTE_OPS);
-        const int res1 = _mm_cmpistrs(p[1], p[1], _SIDD_UBYTE_OPS);
-        const int res2 = _mm_cmpistrs(p[2], p[2], _SIDD_UBYTE_OPS);
-        const int res3 = _mm_cmpistrs(p[3], p[3], _SIDD_UBYTE_OPS);
-        const int res4 = _mm_cmpistrs(p[4], p[4], _SIDD_UBYTE_OPS);
-        const int res5 = _mm_cmpistrs(p[5], p[5], _SIDD_UBYTE_OPS);
-        const int res6 = _mm_cmpistrs(p[6], p[6], _SIDD_UBYTE_OPS);
-        const int res7 = _mm_cmpistrs(p[7], p[7], _SIDD_UBYTE_OPS);
+        const int res0 = _mm_cmpistrs(p[0], p[1], _SIDD_UBYTE_OPS);
+        const int res1 = _mm_cmpistrz(p[0], p[1], _SIDD_UBYTE_OPS);
+        const int res2 = _mm_cmpistrs(p[2], p[3], _SIDD_UBYTE_OPS);
+        const int res3 = _mm_cmpistrz(p[2], p[3], _SIDD_UBYTE_OPS);
+        const int res4 = _mm_cmpistrs(p[4], p[5], _SIDD_UBYTE_OPS);
+        const int res5 = _mm_cmpistrz(p[4], p[5], _SIDD_UBYTE_OPS);
+        const int res6 = _mm_cmpistrs(p[6], p[7], _SIDD_UBYTE_OPS);
+        const int res7 = _mm_cmpistrz(p[6], p[7], _SIDD_UBYTE_OPS);
         if (res0 || res1 || res2 || res3 || res4 || res5 || res6 || res7)
             break;
     }
@@ -178,24 +193,47 @@ size_t my_strlen_SSE_unroll_16(const char * const s)
     size_t c = 0;
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
     for (; ; p += UNROLL, c++) {
-        const int res0 = _mm_cmpistrs(p[0], p[0], _SIDD_UBYTE_OPS);
-        const int res1 = _mm_cmpistrs(p[1], p[1], _SIDD_UBYTE_OPS);
-        const int res2 = _mm_cmpistrs(p[2], p[2], _SIDD_UBYTE_OPS);
-        const int res3 = _mm_cmpistrs(p[3], p[3], _SIDD_UBYTE_OPS);
-        const int res4 = _mm_cmpistrs(p[4], p[4], _SIDD_UBYTE_OPS);
-        const int res5 = _mm_cmpistrs(p[5], p[5], _SIDD_UBYTE_OPS);
-        const int res6 = _mm_cmpistrs(p[6], p[6], _SIDD_UBYTE_OPS);
-        const int res7 = _mm_cmpistrs(p[7], p[7], _SIDD_UBYTE_OPS);
-        const int res8 = _mm_cmpistrs(p[8], p[8], _SIDD_UBYTE_OPS);
-        const int res9 = _mm_cmpistrs(p[9], p[9], _SIDD_UBYTE_OPS);
-        const int resa = _mm_cmpistrs(p[10], p[10], _SIDD_UBYTE_OPS);
-        const int resb = _mm_cmpistrs(p[11], p[11], _SIDD_UBYTE_OPS);
-        const int resc = _mm_cmpistrs(p[12], p[12], _SIDD_UBYTE_OPS);
-        const int resd = _mm_cmpistrs(p[13], p[13], _SIDD_UBYTE_OPS);
-        const int rese = _mm_cmpistrs(p[14], p[14], _SIDD_UBYTE_OPS);
-        const int resf = _mm_cmpistrs(p[15], p[15], _SIDD_UBYTE_OPS);
+        const int res0 = _mm_cmpistrs(p[0], p[1], _SIDD_UBYTE_OPS);
+        const int res1 = _mm_cmpistrz(p[0], p[1], _SIDD_UBYTE_OPS);
+        const int res2 = _mm_cmpistrs(p[2], p[3], _SIDD_UBYTE_OPS);
+        const int res3 = _mm_cmpistrz(p[2], p[3], _SIDD_UBYTE_OPS);
+        const int res4 = _mm_cmpistrs(p[4], p[5], _SIDD_UBYTE_OPS);
+        const int res5 = _mm_cmpistrz(p[4], p[5], _SIDD_UBYTE_OPS);
+        const int res6 = _mm_cmpistrs(p[6], p[7], _SIDD_UBYTE_OPS);
+        const int res7 = _mm_cmpistrz(p[6], p[7], _SIDD_UBYTE_OPS);
+        const int res8 = _mm_cmpistrs(p[8], p[9], _SIDD_UBYTE_OPS);
+        const int res9 = _mm_cmpistrz(p[8], p[9], _SIDD_UBYTE_OPS);
+        const int resa = _mm_cmpistrs(p[10], p[11], _SIDD_UBYTE_OPS);
+        const int resb = _mm_cmpistrz(p[10], p[11], _SIDD_UBYTE_OPS);
+        const int resc = _mm_cmpistrs(p[12], p[13], _SIDD_UBYTE_OPS);
+        const int resd = _mm_cmpistrz(p[12], p[13], _SIDD_UBYTE_OPS);
+        const int rese = _mm_cmpistrs(p[14], p[15], _SIDD_UBYTE_OPS);
+        const int resf = _mm_cmpistrz(p[14], p[15], _SIDD_UBYTE_OPS);
         if (res0 || res1 || res2 || res3 || res4 || res5 || res6 || res7
                 || res8 || res9 || resa || resb || resc || resd || rese || resf)
+            break;
+    }
+
+    return c * (128/8) * UNROLL
+        + find_null_char((const char*) p, (128/8) * UNROLL);
+
+#undef UNROLL
+}
+
+static
+size_t my_strlen_SSE_unroll_2_separate_load_cmp(const char * const s)
+{
+    /* Must be less than or equal to 4096 / (128/8) = 256. */
+#define UNROLL 2
+
+    size_t c = 0;
+    const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    for (; ; p += UNROLL, c++) {
+        const __m128i v0 = _mm_stream_load_si128(p + 0);
+        const __m128i v1 = _mm_stream_load_si128(p + 1);
+        const int res0 = _mm_cmpistrs(v0, v1, _SIDD_UBYTE_OPS);
+        const int res1 = _mm_cmpistrz(v0, v1, _SIDD_UBYTE_OPS);
+        if (res0 || res1)
             break;
     }
 
@@ -218,10 +256,10 @@ size_t my_strlen_SSE_unroll_4_separate_load_cmp(const char * const s)
         const __m128i v1 = _mm_stream_load_si128(p + 1);
         const __m128i v2 = _mm_stream_load_si128(p + 2);
         const __m128i v3 = _mm_stream_load_si128(p + 3);
-        const int res0 = _mm_cmpistrs(v0, v0, _SIDD_UBYTE_OPS);
-        const int res1 = _mm_cmpistrs(v1, v1, _SIDD_UBYTE_OPS);
-        const int res2 = _mm_cmpistrs(v2, v2, _SIDD_UBYTE_OPS);
-        const int res3 = _mm_cmpistrs(v3, v3, _SIDD_UBYTE_OPS);
+        const int res0 = _mm_cmpistrs(v0, v1, _SIDD_UBYTE_OPS);
+        const int res1 = _mm_cmpistrz(v0, v1, _SIDD_UBYTE_OPS);
+        const int res2 = _mm_cmpistrs(v2, v3, _SIDD_UBYTE_OPS);
+        const int res3 = _mm_cmpistrz(v2, v3, _SIDD_UBYTE_OPS);
         if (res0 || res1 || res2 || res3)
             break;
     }
@@ -249,14 +287,14 @@ size_t my_strlen_SSE_unroll_8_separate_load_cmp(const char * const s)
         const __m128i v5 = _mm_stream_load_si128(p + 5);
         const __m128i v6 = _mm_stream_load_si128(p + 6);
         const __m128i v7 = _mm_stream_load_si128(p + 7);
-        const int res0 = _mm_cmpistrs(v0, v0, _SIDD_UBYTE_OPS);
-        const int res1 = _mm_cmpistrs(v1, v1, _SIDD_UBYTE_OPS);
-        const int res2 = _mm_cmpistrs(v2, v2, _SIDD_UBYTE_OPS);
-        const int res3 = _mm_cmpistrs(v3, v3, _SIDD_UBYTE_OPS);
-        const int res4 = _mm_cmpistrs(v4, v4, _SIDD_UBYTE_OPS);
-        const int res5 = _mm_cmpistrs(v5, v5, _SIDD_UBYTE_OPS);
-        const int res6 = _mm_cmpistrs(v6, v6, _SIDD_UBYTE_OPS);
-        const int res7 = _mm_cmpistrs(v7, v7, _SIDD_UBYTE_OPS);
+        const int res0 = _mm_cmpistrs(v0, v1, _SIDD_UBYTE_OPS);
+        const int res1 = _mm_cmpistrz(v0, v1, _SIDD_UBYTE_OPS);
+        const int res2 = _mm_cmpistrs(v2, v3, _SIDD_UBYTE_OPS);
+        const int res3 = _mm_cmpistrz(v2, v3, _SIDD_UBYTE_OPS);
+        const int res4 = _mm_cmpistrs(v4, v5, _SIDD_UBYTE_OPS);
+        const int res5 = _mm_cmpistrz(v4, v5, _SIDD_UBYTE_OPS);
+        const int res6 = _mm_cmpistrs(v6, v7, _SIDD_UBYTE_OPS);
+        const int res7 = _mm_cmpistrz(v6, v7, _SIDD_UBYTE_OPS);
         if (res0 || res1 || res2 || res3 || res4 || res5 || res6 || res7)
             break;
     }
@@ -292,22 +330,22 @@ size_t my_strlen_SSE_unroll_16_separate_load_cmp(const char * const s)
         const __m128i vd = _mm_stream_load_si128(p + 13);
         const __m128i ve = _mm_stream_load_si128(p + 14);
         const __m128i vf = _mm_stream_load_si128(p + 15);
-        const int res0 = _mm_cmpistrs(v0, v0, _SIDD_UBYTE_OPS);
-        const int res1 = _mm_cmpistrs(v1, v1, _SIDD_UBYTE_OPS);
-        const int res2 = _mm_cmpistrs(v2, v2, _SIDD_UBYTE_OPS);
-        const int res3 = _mm_cmpistrs(v3, v3, _SIDD_UBYTE_OPS);
-        const int res4 = _mm_cmpistrs(v4, v4, _SIDD_UBYTE_OPS);
-        const int res5 = _mm_cmpistrs(v5, v5, _SIDD_UBYTE_OPS);
-        const int res6 = _mm_cmpistrs(v6, v6, _SIDD_UBYTE_OPS);
-        const int res7 = _mm_cmpistrs(v7, v7, _SIDD_UBYTE_OPS);
-        const int res8 = _mm_cmpistrs(v8, v8, _SIDD_UBYTE_OPS);
-        const int res9 = _mm_cmpistrs(v9, v9, _SIDD_UBYTE_OPS);
-        const int resa = _mm_cmpistrs(va, va, _SIDD_UBYTE_OPS);
-        const int resb = _mm_cmpistrs(vb, vb, _SIDD_UBYTE_OPS);
-        const int resc = _mm_cmpistrs(vc, vc, _SIDD_UBYTE_OPS);
-        const int resd = _mm_cmpistrs(vd, vd, _SIDD_UBYTE_OPS);
-        const int rese = _mm_cmpistrs(ve, ve, _SIDD_UBYTE_OPS);
-        const int resf = _mm_cmpistrs(vf, vf, _SIDD_UBYTE_OPS);
+        const int res0 = _mm_cmpistrs(v0, v1, _SIDD_UBYTE_OPS);
+        const int res1 = _mm_cmpistrz(v0, v1, _SIDD_UBYTE_OPS);
+        const int res2 = _mm_cmpistrs(v2, v3, _SIDD_UBYTE_OPS);
+        const int res3 = _mm_cmpistrz(v2, v3, _SIDD_UBYTE_OPS);
+        const int res4 = _mm_cmpistrs(v4, v5, _SIDD_UBYTE_OPS);
+        const int res5 = _mm_cmpistrz(v4, v5, _SIDD_UBYTE_OPS);
+        const int res6 = _mm_cmpistrs(v6, v7, _SIDD_UBYTE_OPS);
+        const int res7 = _mm_cmpistrz(v6, v7, _SIDD_UBYTE_OPS);
+        const int res8 = _mm_cmpistrs(v8, v9, _SIDD_UBYTE_OPS);
+        const int res9 = _mm_cmpistrz(v8, v9, _SIDD_UBYTE_OPS);
+        const int resa = _mm_cmpistrs(va, vb, _SIDD_UBYTE_OPS);
+        const int resb = _mm_cmpistrz(va, vb, _SIDD_UBYTE_OPS);
+        const int resc = _mm_cmpistrs(vc, vd, _SIDD_UBYTE_OPS);
+        const int resd = _mm_cmpistrz(vc, vd, _SIDD_UBYTE_OPS);
+        const int rese = _mm_cmpistrs(ve, vf, _SIDD_UBYTE_OPS);
+        const int resf = _mm_cmpistrz(ve, vf, _SIDD_UBYTE_OPS);
         if (res0 || res1 || res2 || res3 || res4 || res5 || res6 || res7
                 || res8 || res9 || resa || resb || resc || resd || rese || resf)
             break;
@@ -627,10 +665,11 @@ int main(void)
     DO(my_strlen_rep, 8);
 
 #ifdef __SSE4_2__
-    DO(my_strlen_SSE, 128);
+    DO(my_strlen_SSE_unroll_2, 128);
     DO(my_strlen_SSE_unroll_4, 128);
     DO(my_strlen_SSE_unroll_8, 128);
     DO(my_strlen_SSE_unroll_16, 128);
+    DO(my_strlen_SSE_unroll_2_separate_load_cmp, 128);
     DO(my_strlen_SSE_unroll_4_separate_load_cmp, 128);
     DO(my_strlen_SSE_unroll_8_separate_load_cmp, 128);
     DO(my_strlen_SSE_unroll_16_separate_load_cmp, 128);
