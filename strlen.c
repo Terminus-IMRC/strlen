@@ -294,7 +294,7 @@ size_t my_strlen_pcmpistri_unroll_2_stream_both(const char * const s)
 #define UNROLL 2
 
     size_t c = 0;
-    const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
     for (; ; p += UNROLL, c++) {
         const __m128i v0 = _mm_stream_load_si128(p + 0);
         const __m128i v1 = _mm_stream_load_si128(p + 1);
