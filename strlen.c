@@ -1044,7 +1044,7 @@ int main(void)
 
 #define DO(func, repetition) \
     do { \
-        printf("%-48s: ", #func); \
+        printf("%-41s: ", #func); \
         bench_strlen(s, len-1, func, repetition); \
     } while (0)
 
