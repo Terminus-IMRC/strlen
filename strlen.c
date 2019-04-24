@@ -27,6 +27,44 @@
  * +--------------------------+--------------------+-------------+-----+-----+-------+
  */
 
+
+#if defined(__SSE4_2__)
+#define DO_PCMPISTRI
+#endif
+
+#if defined(__SSE4_1__) && defined(__SSE4_2__)
+#define DO_PCMPISTRI_STREAM
+#endif
+
+#if defined(__SSE2__) && defined(__SSE4_1__)
+#define DO_PTEST
+#endif
+
+#if defined(__SSE2__)
+#define DO_PMOVMSKB
+#endif
+
+#if defined(__AVX__) && defined(__AVX2__)
+#define DO_VPTEST
+#endif
+
+#if defined(__AVX__) && defined(__AVX2__)
+#define DO_VPMOVMSKB
+#endif
+
+#if defined(__AVX512F__) && defined(__AVX512BW__)
+#define DO_VPCMPB
+#endif
+
+#if defined(__AVX512BW__)
+#define DO_VPTESTNMB
+#endif
+
+#if defined(__AVX512F__) && defined(__AVX512BW__)
+#define DO_VPTESTNMB_STREAM
+#endif
+
+
 #include <immintrin.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -116,7 +154,22 @@ size_t my_strlen_rep(const char * const s)
     return ~c - 1;
 }
 
-#ifdef __SSE4_2__
+
+/*
+ * As for UNROLL:
+ * For xmm, it must be less than or equal to 4096 / (128/8) = 256.
+ * For ymm, it must be less than or equal to 4096 / (256/8) = 128.
+ * For zmm, it must be less than or equal to 4096 / (512/8) = 64.
+ */
+
+/*
+ * _mm*_cmpeq_epi8: Set 0xff if matched, or else 0x00.
+ * _mm*_testz_si*: Set ZF if logical AND of two inputs are all zero.
+ * _mm*_movemask_epi8: Return r32 which corresponds to MSBs of each epi8.
+ * _mm512_cmpeq_epi8_mask: Set bits in mask64 if two epi8 are the same.
+ * _mm512_testn_epi8_mask: Same as above.
+ * _ktestz_mask64_u8: Set ZF if logical AND of two inputs are all zero.
+ */
 
 /*
  * _mm_cmpistr* (pcmpistri xmm1, xmm2/m128, imm8) sets SF if any byte/word of
@@ -124,10 +177,12 @@ size_t my_strlen_rep(const char * const s)
  * obtained with _mm_cmpistrs and ZF can be obtained with _mm_cmpistrz.
  */
 
+
+#ifdef DO_PCMPISTRI
+
 static
 size_t my_strlen_pcmpistri_unroll_2(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 2
 
     size_t c = 0;
@@ -148,7 +203,6 @@ size_t my_strlen_pcmpistri_unroll_2(const char * const s)
 static
 size_t my_strlen_pcmpistri_unroll_4(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 4
 
     size_t c = 0;
@@ -171,7 +225,6 @@ size_t my_strlen_pcmpistri_unroll_4(const char * const s)
 static
 size_t my_strlen_pcmpistri_unroll_8(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 8
 
     size_t c = 0;
@@ -198,7 +251,6 @@ size_t my_strlen_pcmpistri_unroll_8(const char * const s)
 static
 size_t my_strlen_pcmpistri_unroll_16(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 16
 
     size_t c = 0;
@@ -231,10 +283,14 @@ size_t my_strlen_pcmpistri_unroll_16(const char * const s)
 #undef UNROLL
 }
 
+#endif /* DO_PCMPISTRI */
+
+
+#ifdef DO_PCMPISTRI_STREAM
+
 static
 size_t my_strlen_pcmpistri_unroll_2_stream_both(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 2
 
     size_t c = 0;
@@ -257,7 +313,6 @@ size_t my_strlen_pcmpistri_unroll_2_stream_both(const char * const s)
 static
 size_t my_strlen_pcmpistri_unroll_4_stream_both(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 4
 
     size_t c = 0;
@@ -284,7 +339,6 @@ size_t my_strlen_pcmpistri_unroll_4_stream_both(const char * const s)
 static
 size_t my_strlen_pcmpistri_unroll_8_stream_both(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 8
 
     size_t c = 0;
@@ -319,7 +373,6 @@ size_t my_strlen_pcmpistri_unroll_8_stream_both(const char * const s)
 static
 size_t my_strlen_pcmpistri_unroll_16_stream_both(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 16
 
     size_t c = 0;
@@ -368,21 +421,20 @@ size_t my_strlen_pcmpistri_unroll_16_stream_both(const char * const s)
 #undef UNROLL
 }
 
-#endif /* __SSE4_2__ */
+#endif /* DO_PCMPISTRI_STREAM */
 
-#ifdef __SSE4_1__
+
+#ifdef DO_PTEST
 
 static
 size_t my_strlen_ptest_unroll_2(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 2
 
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
     size_t c = 0;
     for (; ; p += UNROLL, c++) {
         const __m128i tmp = _mm_min_epu8(p[0], p[1]);
-        /* Match=0xff Unmatch=0x00 */
         const __m128i cmp = _mm_cmpeq_epi8(tmp, _mm_setzero_si128());
         if (!_mm_testz_si128(cmp, cmp))
             break;
@@ -397,7 +449,6 @@ size_t my_strlen_ptest_unroll_2(const char * const s)
 static
 size_t my_strlen_ptest_unroll_4(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 4
 
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -406,7 +457,6 @@ size_t my_strlen_ptest_unroll_4(const char * const s)
         const __m128i tmp01 = _mm_min_epu8(p[0], p[1]);
         const __m128i tmp23 = _mm_min_epu8(p[2], p[3]);
         const __m128i tmp0123 = _mm_min_epu8(tmp01, tmp23);
-        /* Match=0xff Unmatch=0x00 */
         const __m128i cmp = _mm_cmpeq_epi8(tmp0123, _mm_setzero_si128());
         if (!_mm_testz_si128(cmp, cmp))
             break;
@@ -421,7 +471,6 @@ size_t my_strlen_ptest_unroll_4(const char * const s)
 static
 size_t my_strlen_ptest_unroll_8(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (128/8) = 256. */
 #define UNROLL 8
 
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -434,7 +483,6 @@ size_t my_strlen_ptest_unroll_8(const char * const s)
         const __m128i tmp67 = _mm_min_epu8(p[6], p[7]);
         const __m128i tmp4567 = _mm_min_epu8(tmp45, tmp67);
         const __m128i tmp01234567 = _mm_min_epu8(tmp0123, tmp4567);
-        /* Match=0xff Unmatch=0x00 */
         const __m128i cmp = _mm_cmpeq_epi8(tmp01234567, _mm_setzero_si128());
         if (!_mm_testz_si128(cmp, cmp))
             break;
@@ -446,21 +494,20 @@ size_t my_strlen_ptest_unroll_8(const char * const s)
 #undef UNROLL
 }
 
-#endif /* __SSE4_1__ */
+#endif /* DO_PTEST */
 
-#ifdef __SSE2__
+
+#ifdef DO_PMOVMSKB
 
 static
 size_t my_strlen_pmovmskb_unroll_2(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (128/8) = 128. */
 #define UNROLL 2
 
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
     size_t c = 0;
     for (; ; p += UNROLL, c++) {
         const __m128i tmp = _mm_min_epu8(p[0], p[1]);
-        /* Match=0xff Unmatch=0x00 */
         const __m128i cmp = _mm_cmpeq_epi8(tmp, _mm_setzero_si128());
         if (_mm_movemask_epi8(cmp))
             break;
@@ -475,7 +522,6 @@ size_t my_strlen_pmovmskb_unroll_2(const char * const s)
 static
 size_t my_strlen_pmovmskb_unroll_4(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (128/8) = 128. */
 #define UNROLL 4
 
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -484,7 +530,6 @@ size_t my_strlen_pmovmskb_unroll_4(const char * const s)
         const __m128i tmp01 = _mm_min_epu8(p[0], p[1]);
         const __m128i tmp23 = _mm_min_epu8(p[2], p[3]);
         const __m128i tmp0123 = _mm_min_epu8(tmp01, tmp23);
-        /* Match=0xff Unmatch=0x00 */
         const __m128i cmp = _mm_cmpeq_epi8(tmp0123, _mm_setzero_si128());
         if (_mm_movemask_epi8(cmp))
             break;
@@ -499,7 +544,6 @@ size_t my_strlen_pmovmskb_unroll_4(const char * const s)
 static
 size_t my_strlen_pmovmskb_unroll_8(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (128/8) = 128. */
 #define UNROLL 8
 
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -512,7 +556,6 @@ size_t my_strlen_pmovmskb_unroll_8(const char * const s)
         const __m128i tmp67 = _mm_min_epu8(p[6], p[7]);
         const __m128i tmp4567 = _mm_min_epu8(tmp45, tmp67);
         const __m128i tmp01234567 = _mm_min_epu8(tmp0123, tmp4567);
-        /* Match=0xff Unmatch=0x00 */
         const __m128i cmp = _mm_cmpeq_epi8(tmp01234567, _mm_setzero_si128());
         if (_mm_movemask_epi8(cmp))
             break;
@@ -524,21 +567,20 @@ size_t my_strlen_pmovmskb_unroll_8(const char * const s)
 #undef UNROLL
 }
 
-#endif /* __SSE2__ */
+#endif /* DO_PMOVMSKB */
 
-#ifdef __AVX2__
+
+#ifdef DO_VPTEST
 
 static
 size_t my_strlen_vptest_unroll_2(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (256/8) = 128. */
 #define UNROLL 2
 
     const __m256i *p = (__m256i*) __builtin_assume_aligned(s, PAGE_SIZE);
     size_t c = 0;
     for (; ; p += UNROLL, c++) {
         const __m256i tmp = _mm256_min_epu8(p[0], p[1]);
-        /* Match=0xff Unmatch=0x00 */
         const __m256i cmp = _mm256_cmpeq_epi8(tmp, _mm256_setzero_si256());
         if (!_mm256_testz_si256(cmp, cmp))
             break;
@@ -553,7 +595,6 @@ size_t my_strlen_vptest_unroll_2(const char * const s)
 static
 size_t my_strlen_vptest_unroll_4(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (256/8) = 128. */
 #define UNROLL 4
 
     const __m256i *p = (__m256i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -562,7 +603,6 @@ size_t my_strlen_vptest_unroll_4(const char * const s)
         const __m256i tmp01 = _mm256_min_epu8(p[0], p[1]);
         const __m256i tmp23 = _mm256_min_epu8(p[2], p[3]);
         const __m256i tmp0123 = _mm256_min_epu8(tmp01, tmp23);
-        /* Match=0xff Unmatch=0x00 */
         const __m256i cmp = _mm256_cmpeq_epi8(tmp0123, _mm256_setzero_si256());
         if (!_mm256_testz_si256(cmp, cmp))
             break;
@@ -577,7 +617,6 @@ size_t my_strlen_vptest_unroll_4(const char * const s)
 static
 size_t my_strlen_vptest_unroll_8(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (256/8) = 128. */
 #define UNROLL 8
 
     const __m256i *p = (__m256i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -590,7 +629,6 @@ size_t my_strlen_vptest_unroll_8(const char * const s)
         const __m256i tmp67 = _mm256_min_epu8(p[6], p[7]);
         const __m256i tmp4567 = _mm256_min_epu8(tmp45, tmp67);
         const __m256i tmp01234567 = _mm256_min_epu8(tmp0123, tmp4567);
-        /* Match=0xff Unmatch=0x00 */
         const __m256i cmp = _mm256_cmpeq_epi8(tmp01234567,
                 _mm256_setzero_si256());
         if (!_mm256_testz_si256(cmp, cmp))
@@ -603,17 +641,20 @@ size_t my_strlen_vptest_unroll_8(const char * const s)
 #undef UNROLL
 }
 
+#endif /* DO_VPTEST */
+
+
+#ifdef DO_VPMOVMSKB
+
 static
 size_t my_strlen_vpmovmskb_unroll_2(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (256/8) = 128. */
 #define UNROLL 2
 
     const __m256i *p = (__m256i*) __builtin_assume_aligned(s, PAGE_SIZE);
     size_t c = 0;
     for (; ; p += UNROLL, c++) {
         const __m256i tmp = _mm256_min_epu8(p[0], p[1]);
-        /* Match=0xff Unmatch=0x00 */
         const __m256i cmp = _mm256_cmpeq_epi8(tmp, _mm256_setzero_si256());
         if (_mm256_movemask_epi8(cmp))
             break;
@@ -628,7 +669,6 @@ size_t my_strlen_vpmovmskb_unroll_2(const char * const s)
 static
 size_t my_strlen_vpmovmskb_unroll_4(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (256/8) = 128. */
 #define UNROLL 4
 
     const __m256i *p = (__m256i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -637,7 +677,6 @@ size_t my_strlen_vpmovmskb_unroll_4(const char * const s)
         const __m256i tmp01 = _mm256_min_epu8(p[0], p[1]);
         const __m256i tmp23 = _mm256_min_epu8(p[2], p[3]);
         const __m256i tmp0123 = _mm256_min_epu8(tmp01, tmp23);
-        /* Match=0xff Unmatch=0x00 */
         const __m256i cmp = _mm256_cmpeq_epi8(tmp0123, _mm256_setzero_si256());
         if (_mm256_movemask_epi8(cmp))
             break;
@@ -652,7 +691,6 @@ size_t my_strlen_vpmovmskb_unroll_4(const char * const s)
 static
 size_t my_strlen_vpmovmskb_unroll_8(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (256/8) = 128. */
 #define UNROLL 8
 
     const __m256i *p = (__m256i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -665,7 +703,6 @@ size_t my_strlen_vpmovmskb_unroll_8(const char * const s)
         const __m256i tmp67 = _mm256_min_epu8(p[6], p[7]);
         const __m256i tmp4567 = _mm256_min_epu8(tmp45, tmp67);
         const __m256i tmp01234567 = _mm256_min_epu8(tmp0123, tmp4567);
-        /* Match=0xff Unmatch=0x00 */
         const __m256i cmp = _mm256_cmpeq_epi8(tmp01234567,
                 _mm256_setzero_si256());
         if (_mm256_movemask_epi8(cmp))
@@ -678,21 +715,20 @@ size_t my_strlen_vpmovmskb_unroll_8(const char * const s)
 #undef UNROLL
 }
 
-#endif /* __AVX2__ */
+#endif /* DO_VPMOVMSKB */
 
-#ifdef __AVX512BW__
+
+#ifdef DO_VPCMPB
 
 static
-size_t my_strlen_vpcmpeqb_unroll_2(const char * const s)
+size_t my_strlen_vpcmpb_unroll_2(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (512/8) = 64. */
 #define UNROLL 2
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
     size_t c = 0;
     for (; ; p += UNROLL, c++) {
         const __m512i tmp = _mm512_min_epu8(p[0], p[1]);
-        /* vpcmpeqb: equal => 1, not equal => 0 */
         const __mmask64 cmp = _mm512_cmpeq_epi8_mask(tmp,
                 _mm512_setzero_si512());
         if (!_ktestz_mask64_u8(cmp, cmp))
@@ -705,17 +741,20 @@ size_t my_strlen_vpcmpeqb_unroll_2(const char * const s)
 #undef UNROLL
 }
 
+#endif /* DO_VPCMPB */
+
+
+#ifdef DO_VPTESTNMB
+
 static
 size_t my_strlen_vptestnmb_unroll_2(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (512/8) = 64. */
 #define UNROLL 2
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
     size_t c = 0;
     for (; ; p += UNROLL, c++) {
         const __m512i tmp = _mm512_min_epu8(p[0], p[1]);
-        /* 0x00 => 1, others => 0 */
         const __mmask64 cmp = _mm512_testn_epi8_mask(tmp, tmp);
         if (!_ktestz_mask64_u8(cmp, cmp))
             break;
@@ -730,7 +769,6 @@ size_t my_strlen_vptestnmb_unroll_2(const char * const s)
 static
 size_t my_strlen_vptestnmb_unroll_4(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (512/8) = 64. */
 #define UNROLL 4
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -753,7 +791,6 @@ size_t my_strlen_vptestnmb_unroll_4(const char * const s)
 static
 size_t my_strlen_vptestnmb_unroll_8(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (512/8) = 64. */
 #define UNROLL 8
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -782,7 +819,6 @@ size_t my_strlen_vptestnmb_unroll_8(const char * const s)
 static
 size_t my_strlen_vptestnmb_unroll_16(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (512/8) = 64. */
 #define UNROLL 16
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -816,10 +852,14 @@ size_t my_strlen_vptestnmb_unroll_16(const char * const s)
 #undef UNROLL
 }
 
+#endif /* DO_VPTESTNMB */
+
+
+#ifdef DO_VPTESTNMB_STREAM
+
 static
 size_t my_strlen_vptestnmb_unroll_2_stream_both(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (512/8) = 64. */
 #define UNROLL 2
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -828,7 +868,6 @@ size_t my_strlen_vptestnmb_unroll_2_stream_both(const char * const s)
         const __m512i v0 = _mm512_stream_load_si512(p + 0);
         const __m512i v1 = _mm512_stream_load_si512(p + 1);
         const __m512i tmp = _mm512_min_epu8(v0, v1);
-        /* 0x00 => 1, others => 0 */
         const __mmask64 cmp = _mm512_testn_epi8_mask(tmp, tmp);
         if (!_ktestz_mask64_u8(cmp, cmp))
             break;
@@ -843,7 +882,6 @@ size_t my_strlen_vptestnmb_unroll_2_stream_both(const char * const s)
 static
 size_t my_strlen_vptestnmb_unroll_4_stream_both(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (512/8) = 64. */
 #define UNROLL 4
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -870,7 +908,6 @@ size_t my_strlen_vptestnmb_unroll_4_stream_both(const char * const s)
 static
 size_t my_strlen_vptestnmb_unroll_8_stream_both(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (512/8) = 64. */
 #define UNROLL 8
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -905,7 +942,6 @@ size_t my_strlen_vptestnmb_unroll_8_stream_both(const char * const s)
 static
 size_t my_strlen_vptestnmb_unroll_16_stream_both(const char * const s)
 {
-    /* Must be less than or equal to 4096 / (512/8) = 64. */
 #define UNROLL 16
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
@@ -955,7 +991,8 @@ size_t my_strlen_vptestnmb_unroll_16_stream_both(const char * const s)
 #undef UNROLL
 }
 
-#endif /* __AVX512BW__ */
+#endif /* DO_VPTESTNMB_STREAM */
+
 
 static
 void bench_strlen(char * const s, const size_t len_expected,
@@ -983,6 +1020,8 @@ void bench_strlen(char * const s, const size_t len_expected,
     barrier();
 
     const double t = (end - start) / repetition;
+
+    /* Need a cooldown here? */
 
     printf("%e [s], %e [s], %e [char/s]\n", end - start, t, len_expected / t);
 }
@@ -1013,46 +1052,61 @@ int main(void)
     DO(my_strlen_pure, 32);
     DO(my_strlen_rep, 8);
 
-#ifdef __SSE4_2__
+#ifdef DO_PCMPISTRI
     DO(my_strlen_pcmpistri_unroll_2, 128);
     DO(my_strlen_pcmpistri_unroll_4, 128);
     DO(my_strlen_pcmpistri_unroll_8, 128);
     DO(my_strlen_pcmpistri_unroll_16, 128);
+#endif /* DO_PCMPISTRI */
+
+#ifdef DO_PCMPISTRI_STREAM
     DO(my_strlen_pcmpistri_unroll_2_stream_both, 128);
     DO(my_strlen_pcmpistri_unroll_4_stream_both, 128);
     DO(my_strlen_pcmpistri_unroll_8_stream_both, 128);
     DO(my_strlen_pcmpistri_unroll_16_stream_both, 128);
-#endif /* __SSE4_2__ */
+#endif /* DO_PCMPISTRI_STREAM */
 
-#ifdef __SSE4_1__
+#ifdef DO_PTEST
     DO(my_strlen_ptest_unroll_2, 128);
     DO(my_strlen_ptest_unroll_4, 128);
     DO(my_strlen_ptest_unroll_8, 128);
+#endif /* DO_PTEST */
+
+#ifdef DO_PMOVMSKB
     DO(my_strlen_pmovmskb_unroll_2, 128);
     DO(my_strlen_pmovmskb_unroll_4, 128);
     DO(my_strlen_pmovmskb_unroll_8, 128);
-#endif /* __SSE4_1__ */
+#endif /* DO_PMOVMSKB */
 
-#ifdef __AVX2__
+#ifdef DO_VPTEST
     DO(my_strlen_vptest_unroll_2, 128);
     DO(my_strlen_vptest_unroll_4, 128);
     DO(my_strlen_vptest_unroll_8, 128);
+#endif /* DO_VPTEST */
+
+#ifdef DO_VPMOVMSKB
     DO(my_strlen_vpmovmskb_unroll_2, 128);
     DO(my_strlen_vpmovmskb_unroll_4, 128);
     DO(my_strlen_vpmovmskb_unroll_8, 128);
-#endif /* __AVX2__ */
+#endif /* DO_VPMONMSKB */
 
-#ifdef __AVX512BW__
-    DO(my_strlen_vpcmpeqb_unroll_2, 128);
+#ifdef DO_VPCMPB
+    DO(my_strlen_vpcmpb_unroll_2, 128);
+#endif /* DO_VPCMPB */
+
+#ifdef DO_VPTESTNMB
     DO(my_strlen_vptestnmb_unroll_2, 128);
     DO(my_strlen_vptestnmb_unroll_4, 128);
     DO(my_strlen_vptestnmb_unroll_8, 128);
     DO(my_strlen_vptestnmb_unroll_16, 128);
+#endif /* DO_VPTESTNMB */
+
+#ifdef DO_VPTESTNMB_STREAM
     DO(my_strlen_vptestnmb_unroll_2_stream_both, 128);
     DO(my_strlen_vptestnmb_unroll_4_stream_both, 128);
     DO(my_strlen_vptestnmb_unroll_8_stream_both, 128);
     DO(my_strlen_vptestnmb_unroll_16_stream_both, 128);
-#endif /* __AVX512BW__ */
+#endif /* DO_VPTESTNMB_STREAM */
 
     free(s);
     return 0;
