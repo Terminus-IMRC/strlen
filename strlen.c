@@ -445,6 +445,84 @@ size_t my_strlen_ptest_unroll_8(const char * const s)
 
 #endif /* __SSE4_1__ */
 
+#ifdef __SSE2__
+
+static
+size_t my_strlen_pmovmskb_unroll_2(const char * const s)
+{
+    /* Must be less than or equal to 4096 / (128/8) = 128. */
+#define UNROLL 2
+
+    const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    size_t c = 0;
+    for (; ; p += UNROLL, c++) {
+        const __m128i tmp = _mm_min_epu8(p[0], p[1]);
+        /* Match=0xff Unmatch=0x00 */
+        const __m128i cmp = _mm_cmpeq_epi8(tmp, _mm_setzero_si128());
+        if (_mm_movemask_epi8(cmp))
+            break;
+    }
+
+    return c * (128/8) * UNROLL
+        + find_null_char((const char*) p, (128/8) * UNROLL);
+
+#undef UNROLL
+}
+
+static
+size_t my_strlen_pmovmskb_unroll_4(const char * const s)
+{
+    /* Must be less than or equal to 4096 / (128/8) = 128. */
+#define UNROLL 4
+
+    const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    size_t c = 0;
+    for (; ; p += UNROLL, c++) {
+        const __m128i tmp01 = _mm_min_epu8(p[0], p[1]);
+        const __m128i tmp23 = _mm_min_epu8(p[2], p[3]);
+        const __m128i tmp0123 = _mm_min_epu8(tmp01, tmp23);
+        /* Match=0xff Unmatch=0x00 */
+        const __m128i cmp = _mm_cmpeq_epi8(tmp0123, _mm_setzero_si128());
+        if (_mm_movemask_epi8(cmp))
+            break;
+    }
+
+    return c * (128/8) * UNROLL
+        + find_null_char((const char*) p, (128/8) * UNROLL);
+
+#undef UNROLL
+}
+
+static
+size_t my_strlen_pmovmskb_unroll_8(const char * const s)
+{
+    /* Must be less than or equal to 4096 / (128/8) = 128. */
+#define UNROLL 8
+
+    const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
+    size_t c = 0;
+    for (; ; p += UNROLL, c++) {
+        const __m128i tmp01 = _mm_min_epu8(p[0], p[1]);
+        const __m128i tmp23 = _mm_min_epu8(p[2], p[3]);
+        const __m128i tmp0123 = _mm_min_epu8(tmp01, tmp23);
+        const __m128i tmp45 = _mm_min_epu8(p[4], p[5]);
+        const __m128i tmp67 = _mm_min_epu8(p[6], p[7]);
+        const __m128i tmp4567 = _mm_min_epu8(tmp45, tmp67);
+        const __m128i tmp01234567 = _mm_min_epu8(tmp0123, tmp4567);
+        /* Match=0xff Unmatch=0x00 */
+        const __m128i cmp = _mm_cmpeq_epi8(tmp01234567, _mm_setzero_si128());
+        if (_mm_movemask_epi8(cmp))
+            break;
+    }
+
+    return c * (128/8) * UNROLL
+        + find_null_char((const char*) p, (128/8) * UNROLL);
+
+#undef UNROLL
+}
+
+#endif /* __SSE2__ */
+
 #ifdef __AVX2__
 
 static
@@ -947,6 +1025,9 @@ int main(void)
     DO(my_strlen_ptest_unroll_2, 128);
     DO(my_strlen_ptest_unroll_4, 128);
     DO(my_strlen_ptest_unroll_8, 128);
+    DO(my_strlen_pmovmskb_unroll_2, 128);
+    DO(my_strlen_pmovmskb_unroll_4, 128);
+    DO(my_strlen_pmovmskb_unroll_8, 128);
 #endif /* __SSE4_1__ */
 
 #ifdef __AVX2__
