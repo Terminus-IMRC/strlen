@@ -1048,64 +1048,64 @@ int main(void)
         bench_strlen(s, len-1, func, repetition); \
     } while (0)
 
-    DO(strlen, 128);
-    DO(my_strlen_pure, 32);
-    DO(my_strlen_rep, 8);
+    DO(strlen, 512);
+    DO(my_strlen_pure, 64);
+    DO(my_strlen_rep, 32);
 
 #ifdef DO_PCMPISTRI
-    DO(my_strlen_pcmpistri_unroll_2, 128);
-    DO(my_strlen_pcmpistri_unroll_4, 128);
-    DO(my_strlen_pcmpistri_unroll_8, 128);
-    DO(my_strlen_pcmpistri_unroll_16, 128);
+    DO(my_strlen_pcmpistri_unroll_2, 512);
+    DO(my_strlen_pcmpistri_unroll_4, 512);
+    DO(my_strlen_pcmpistri_unroll_8, 512);
+    DO(my_strlen_pcmpistri_unroll_16, 512);
 #endif /* DO_PCMPISTRI */
 
 #ifdef DO_PCMPISTRI_STREAM
-    DO(my_strlen_pcmpistri_unroll_2_stream_both, 128);
-    DO(my_strlen_pcmpistri_unroll_4_stream_both, 128);
-    DO(my_strlen_pcmpistri_unroll_8_stream_both, 128);
-    DO(my_strlen_pcmpistri_unroll_16_stream_both, 128);
+    DO(my_strlen_pcmpistri_unroll_2_stream_both, 512);
+    DO(my_strlen_pcmpistri_unroll_4_stream_both, 512);
+    DO(my_strlen_pcmpistri_unroll_8_stream_both, 512);
+    DO(my_strlen_pcmpistri_unroll_16_stream_both, 512);
 #endif /* DO_PCMPISTRI_STREAM */
 
 #ifdef DO_PTEST
-    DO(my_strlen_ptest_unroll_2, 128);
-    DO(my_strlen_ptest_unroll_4, 128);
-    DO(my_strlen_ptest_unroll_8, 128);
+    DO(my_strlen_ptest_unroll_2, 512);
+    DO(my_strlen_ptest_unroll_4, 512);
+    DO(my_strlen_ptest_unroll_8, 512);
 #endif /* DO_PTEST */
 
 #ifdef DO_PMOVMSKB
-    DO(my_strlen_pmovmskb_unroll_2, 128);
-    DO(my_strlen_pmovmskb_unroll_4, 128);
-    DO(my_strlen_pmovmskb_unroll_8, 128);
+    DO(my_strlen_pmovmskb_unroll_2, 512);
+    DO(my_strlen_pmovmskb_unroll_4, 512);
+    DO(my_strlen_pmovmskb_unroll_8, 512);
 #endif /* DO_PMOVMSKB */
 
 #ifdef DO_VPTEST
-    DO(my_strlen_vptest_unroll_2, 128);
-    DO(my_strlen_vptest_unroll_4, 128);
-    DO(my_strlen_vptest_unroll_8, 128);
+    DO(my_strlen_vptest_unroll_2, 512);
+    DO(my_strlen_vptest_unroll_4, 512);
+    DO(my_strlen_vptest_unroll_8, 512);
 #endif /* DO_VPTEST */
 
 #ifdef DO_VPMOVMSKB
-    DO(my_strlen_vpmovmskb_unroll_2, 128);
-    DO(my_strlen_vpmovmskb_unroll_4, 128);
-    DO(my_strlen_vpmovmskb_unroll_8, 128);
+    DO(my_strlen_vpmovmskb_unroll_2, 512);
+    DO(my_strlen_vpmovmskb_unroll_4, 512);
+    DO(my_strlen_vpmovmskb_unroll_8, 512);
 #endif /* DO_VPMONMSKB */
 
 #ifdef DO_VPCMPB
-    DO(my_strlen_vpcmpb_unroll_2, 128);
+    DO(my_strlen_vpcmpb_unroll_2, 512);
 #endif /* DO_VPCMPB */
 
 #ifdef DO_VPTESTNMB
-    DO(my_strlen_vptestnmb_unroll_2, 128);
-    DO(my_strlen_vptestnmb_unroll_4, 128);
-    DO(my_strlen_vptestnmb_unroll_8, 128);
-    DO(my_strlen_vptestnmb_unroll_16, 128);
+    DO(my_strlen_vptestnmb_unroll_2, 512);
+    DO(my_strlen_vptestnmb_unroll_4, 512);
+    DO(my_strlen_vptestnmb_unroll_8, 512);
+    DO(my_strlen_vptestnmb_unroll_16, 512);
 #endif /* DO_VPTESTNMB */
 
 #ifdef DO_VPTESTNMB_STREAM
-    DO(my_strlen_vptestnmb_unroll_2_stream_both, 128);
-    DO(my_strlen_vptestnmb_unroll_4_stream_both, 128);
-    DO(my_strlen_vptestnmb_unroll_8_stream_both, 128);
-    DO(my_strlen_vptestnmb_unroll_16_stream_both, 128);
+    DO(my_strlen_vptestnmb_unroll_2_stream_both, 512);
+    DO(my_strlen_vptestnmb_unroll_4_stream_both, 512);
+    DO(my_strlen_vptestnmb_unroll_8_stream_both, 512);
+    DO(my_strlen_vptestnmb_unroll_16_stream_both, 512);
 #endif /* DO_VPTESTNMB_STREAM */
 
     free(s);
