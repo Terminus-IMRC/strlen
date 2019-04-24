@@ -4,6 +4,7 @@
 ## Results
 
 - [Intel Core i7-7820X](https://ark.intel.com/products/123767) with 4-ch DDR4-2133 memory and [glibc 2.29](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/multiarch/strlen-avx2.S;h=3e7f14a84603ad5284c443fb0ae157ac99afb1e4;hb=56c86f5dd516284558e106d04b92875d5b623b7a)
+`my_strlen_vpcmpb_unroll_2` / `strlen` = 1.03
 ```
 String length: 128 MiB
 strlen                                   : 4.474206e+00 [s], 8.738684e-03 [s], 1.535903e+10 [char/s]
@@ -41,6 +42,7 @@ my_strlen_vptestnmb_unroll_16_stream_both: 4.529558e+00 [s], 8.846794e-03 [s], 1
 ```
 
 - [Intel Core i5-7500](https://ark.intel.com/products/97123) with 2-ch(?) DDR4-2400 memory and [Apple Libc 1244.50.9](https://opensource.apple.com/source/Libc/Libc-1244.50.9/x86_64/string/strlen.s.auto.html)
+`my_strlen_vptest_unroll_2` / `strlen` = 1.27
 ```
 String length: 128 MiB
 strlen                                   : 3.654697e+00 [s], 7.138080e-03 [s], 1.880306e+10 [char/s]
@@ -69,6 +71,7 @@ my_strlen_vpmovmskb_unroll_8             : 3.051883e+00 [s], 5.960709e-03 [s], 2
 ```
 
 - [Intel Core i5-7500](https://ark.intel.com/products/97123) with 2-ch(?) DDR4-2400 memory and [glibc 2.27](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/multiarch/strlen-avx2.S;h=85d7259746b993bdccb4d0437590494fad045b09;hb=23158b08a0908f381459f273a984c6fd328363cb)
+`my_strlen_vptest_unroll_2` / `strlen` = 1.10
 ```
 String length: 128 MiB
 strlen                                   : 3.279000e+00 [s], 6.404296e-03 [s], 2.095745e+10 [char/s]
@@ -97,6 +100,7 @@ my_strlen_vpmovmskb_unroll_8             : 3.283198e+00 [s], 6.412496e-03 [s], 2
 ```
 
 - [Intel Core m3-7Y32](https://ark.intel.com/products/97538) with 2-ch(?) LPDDR3-1866 memory and [Apple Libc 1244.50.9](https://opensource.apple.com/source/Libc/Libc-1244.50.9/x86_64/string/strlen.s.auto.html)
+`my_strlen_vptest_unroll_2` / `strlen` = 1.26
 ```
 String length: 128 MiB
 strlen                                   : 4.753270e+00 [s], 9.283730e-03 [s], 1.445731e+10 [char/s]
