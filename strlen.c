@@ -67,6 +67,7 @@
 
 
 #include <immintrin.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -187,16 +188,15 @@ size_t my_strlen_pcmpistri_unroll_2(const char * const s)
 {
 #define UNROLL 2
 
-    size_t c = 0;
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const int res0 = _mm_cmpistrs(p[0], p[1], _SIDD_UBYTE_OPS);
         const int res1 = _mm_cmpistrz(p[0], p[1], _SIDD_UBYTE_OPS);
         if (res0 || res1)
             break;
     }
 
-    return c * (128/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
@@ -207,9 +207,8 @@ size_t my_strlen_pcmpistri_unroll_4(const char * const s)
 {
 #define UNROLL 4
 
-    size_t c = 0;
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const int res0 = _mm_cmpistrs(p[0], p[1], _SIDD_UBYTE_OPS);
         const int res1 = _mm_cmpistrz(p[0], p[1], _SIDD_UBYTE_OPS);
         const int res2 = _mm_cmpistrs(p[2], p[3], _SIDD_UBYTE_OPS);
@@ -218,7 +217,7 @@ size_t my_strlen_pcmpistri_unroll_4(const char * const s)
             break;
     }
 
-    return c * (128/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
@@ -229,9 +228,8 @@ size_t my_strlen_pcmpistri_unroll_8(const char * const s)
 {
 #define UNROLL 8
 
-    size_t c = 0;
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const int res0 = _mm_cmpistrs(p[0], p[1], _SIDD_UBYTE_OPS);
         const int res1 = _mm_cmpistrz(p[0], p[1], _SIDD_UBYTE_OPS);
         const int res2 = _mm_cmpistrs(p[2], p[3], _SIDD_UBYTE_OPS);
@@ -244,7 +242,7 @@ size_t my_strlen_pcmpistri_unroll_8(const char * const s)
             break;
     }
 
-    return c * (128/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
@@ -255,9 +253,8 @@ size_t my_strlen_pcmpistri_unroll_16(const char * const s)
 {
 #define UNROLL 16
 
-    size_t c = 0;
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const int res0 = _mm_cmpistrs(p[0], p[1], _SIDD_UBYTE_OPS);
         const int res1 = _mm_cmpistrz(p[0], p[1], _SIDD_UBYTE_OPS);
         const int res2 = _mm_cmpistrs(p[2], p[3], _SIDD_UBYTE_OPS);
@@ -279,7 +276,7 @@ size_t my_strlen_pcmpistri_unroll_16(const char * const s)
             break;
     }
 
-    return c * (128/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
@@ -295,9 +292,8 @@ size_t my_strlen_pcmpistri_unroll_2_stream_both(const char * const s)
 {
 #define UNROLL 2
 
-    size_t c = 0;
     __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m128i v0 = _mm_stream_load_si128(p + 0);
         const __m128i v1 = _mm_stream_load_si128(p + 1);
         const int res0 = _mm_cmpistrs(v0, v1, _SIDD_UBYTE_OPS);
@@ -306,7 +302,7 @@ size_t my_strlen_pcmpistri_unroll_2_stream_both(const char * const s)
             break;
     }
 
-    return c * (128/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
@@ -317,9 +313,8 @@ size_t my_strlen_pcmpistri_unroll_4_stream_both(const char * const s)
 {
 #define UNROLL 4
 
-    size_t c = 0;
     __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m128i v0 = _mm_stream_load_si128(p + 0);
         const __m128i v1 = _mm_stream_load_si128(p + 1);
         const __m128i v2 = _mm_stream_load_si128(p + 2);
@@ -332,7 +327,7 @@ size_t my_strlen_pcmpistri_unroll_4_stream_both(const char * const s)
             break;
     }
 
-    return c * (128/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
@@ -343,9 +338,8 @@ size_t my_strlen_pcmpistri_unroll_8_stream_both(const char * const s)
 {
 #define UNROLL 8
 
-    size_t c = 0;
     __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m128i v0 = _mm_stream_load_si128(p + 0);
         const __m128i v1 = _mm_stream_load_si128(p + 1);
         const __m128i v2 = _mm_stream_load_si128(p + 2);
@@ -366,7 +360,7 @@ size_t my_strlen_pcmpistri_unroll_8_stream_both(const char * const s)
             break;
     }
 
-    return c * (128/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
@@ -377,9 +371,8 @@ size_t my_strlen_pcmpistri_unroll_16_stream_both(const char * const s)
 {
 #define UNROLL 16
 
-    size_t c = 0;
     __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m128i v0 = _mm_stream_load_si128(p + 0);
         const __m128i v1 = _mm_stream_load_si128(p + 1);
         const __m128i v2 = _mm_stream_load_si128(p + 2);
@@ -417,7 +410,7 @@ size_t my_strlen_pcmpistri_unroll_16_stream_both(const char * const s)
             break;
     }
 
-    return c * (128/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
@@ -434,15 +427,14 @@ size_t my_strlen_ptest_unroll_2(const char * const s)
 #define UNROLL 2
 
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m128i tmp = _mm_min_epu8(p[0], p[1]);
         const __m128i cmp = _mm_cmpeq_epi8(tmp, _mm_setzero_si128());
         if (!_mm_testz_si128(cmp, cmp))
             break;
     }
 
-    return c * (128/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
@@ -454,8 +446,7 @@ size_t my_strlen_ptest_unroll_4(const char * const s)
 #define UNROLL 4
 
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m128i tmp01 = _mm_min_epu8(p[0], p[1]);
         const __m128i tmp23 = _mm_min_epu8(p[2], p[3]);
         const __m128i tmp0123 = _mm_min_epu8(tmp01, tmp23);
@@ -464,7 +455,7 @@ size_t my_strlen_ptest_unroll_4(const char * const s)
             break;
     }
 
-    return c * (128/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
@@ -476,8 +467,7 @@ size_t my_strlen_ptest_unroll_8(const char * const s)
 #define UNROLL 8
 
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m128i tmp01 = _mm_min_epu8(p[0], p[1]);
         const __m128i tmp23 = _mm_min_epu8(p[2], p[3]);
         const __m128i tmp0123 = _mm_min_epu8(tmp01, tmp23);
@@ -490,7 +480,7 @@ size_t my_strlen_ptest_unroll_8(const char * const s)
             break;
     }
 
-    return c * (128/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
@@ -507,15 +497,14 @@ size_t my_strlen_pmovmskb_unroll_2(const char * const s)
 #define UNROLL 2
 
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m128i tmp = _mm_min_epu8(p[0], p[1]);
         const __m128i cmp = _mm_cmpeq_epi8(tmp, _mm_setzero_si128());
         if (_mm_movemask_epi8(cmp))
             break;
     }
 
-    return c * (128/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
@@ -527,8 +516,7 @@ size_t my_strlen_pmovmskb_unroll_4(const char * const s)
 #define UNROLL 4
 
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m128i tmp01 = _mm_min_epu8(p[0], p[1]);
         const __m128i tmp23 = _mm_min_epu8(p[2], p[3]);
         const __m128i tmp0123 = _mm_min_epu8(tmp01, tmp23);
@@ -537,7 +525,7 @@ size_t my_strlen_pmovmskb_unroll_4(const char * const s)
             break;
     }
 
-    return c * (128/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
@@ -549,8 +537,7 @@ size_t my_strlen_pmovmskb_unroll_8(const char * const s)
 #define UNROLL 8
 
     const __m128i *p = (__m128i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m128i tmp01 = _mm_min_epu8(p[0], p[1]);
         const __m128i tmp23 = _mm_min_epu8(p[2], p[3]);
         const __m128i tmp0123 = _mm_min_epu8(tmp01, tmp23);
@@ -563,7 +550,7 @@ size_t my_strlen_pmovmskb_unroll_8(const char * const s)
             break;
     }
 
-    return c * (128/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (128/8) * UNROLL);
 
 #undef UNROLL
@@ -580,15 +567,14 @@ size_t my_strlen_vptest_unroll_2(const char * const s)
 #define UNROLL 2
 
     const __m256i *p = (__m256i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m256i tmp = _mm256_min_epu8(p[0], p[1]);
         const __m256i cmp = _mm256_cmpeq_epi8(tmp, _mm256_setzero_si256());
         if (!_mm256_testz_si256(cmp, cmp))
             break;
     }
 
-    return c * (256/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (256/8) * UNROLL);
 
 #undef UNROLL
@@ -600,8 +586,7 @@ size_t my_strlen_vptest_unroll_4(const char * const s)
 #define UNROLL 4
 
     const __m256i *p = (__m256i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m256i tmp01 = _mm256_min_epu8(p[0], p[1]);
         const __m256i tmp23 = _mm256_min_epu8(p[2], p[3]);
         const __m256i tmp0123 = _mm256_min_epu8(tmp01, tmp23);
@@ -610,7 +595,7 @@ size_t my_strlen_vptest_unroll_4(const char * const s)
             break;
     }
 
-    return c * (256/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (256/8) * UNROLL);
 
 #undef UNROLL
@@ -622,8 +607,7 @@ size_t my_strlen_vptest_unroll_8(const char * const s)
 #define UNROLL 8
 
     const __m256i *p = (__m256i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m256i tmp01 = _mm256_min_epu8(p[0], p[1]);
         const __m256i tmp23 = _mm256_min_epu8(p[2], p[3]);
         const __m256i tmp0123 = _mm256_min_epu8(tmp01, tmp23);
@@ -637,7 +621,7 @@ size_t my_strlen_vptest_unroll_8(const char * const s)
             break;
     }
 
-    return c * (256/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (256/8) * UNROLL);
 
 #undef UNROLL
@@ -654,15 +638,14 @@ size_t my_strlen_vpmovmskb_unroll_2(const char * const s)
 #define UNROLL 2
 
     const __m256i *p = (__m256i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m256i tmp = _mm256_min_epu8(p[0], p[1]);
         const __m256i cmp = _mm256_cmpeq_epi8(tmp, _mm256_setzero_si256());
         if (_mm256_movemask_epi8(cmp))
             break;
     }
 
-    return c * (256/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (256/8) * UNROLL);
 
 #undef UNROLL
@@ -674,8 +657,7 @@ size_t my_strlen_vpmovmskb_unroll_4(const char * const s)
 #define UNROLL 4
 
     const __m256i *p = (__m256i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m256i tmp01 = _mm256_min_epu8(p[0], p[1]);
         const __m256i tmp23 = _mm256_min_epu8(p[2], p[3]);
         const __m256i tmp0123 = _mm256_min_epu8(tmp01, tmp23);
@@ -684,7 +666,7 @@ size_t my_strlen_vpmovmskb_unroll_4(const char * const s)
             break;
     }
 
-    return c * (256/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (256/8) * UNROLL);
 
 #undef UNROLL
@@ -696,8 +678,7 @@ size_t my_strlen_vpmovmskb_unroll_8(const char * const s)
 #define UNROLL 8
 
     const __m256i *p = (__m256i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m256i tmp01 = _mm256_min_epu8(p[0], p[1]);
         const __m256i tmp23 = _mm256_min_epu8(p[2], p[3]);
         const __m256i tmp0123 = _mm256_min_epu8(tmp01, tmp23);
@@ -711,7 +692,7 @@ size_t my_strlen_vpmovmskb_unroll_8(const char * const s)
             break;
     }
 
-    return c * (256/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (256/8) * UNROLL);
 
 #undef UNROLL
@@ -728,8 +709,7 @@ size_t my_strlen_vpcmpb_unroll_2(const char * const s)
 #define UNROLL 2
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m512i tmp = _mm512_min_epu8(p[0], p[1]);
         const __mmask64 cmp = _mm512_cmpeq_epi8_mask(tmp,
                 _mm512_setzero_si512());
@@ -737,7 +717,7 @@ size_t my_strlen_vpcmpb_unroll_2(const char * const s)
             break;
     }
 
-    return c * (512/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (512/8) * UNROLL);
 
 #undef UNROLL
@@ -754,15 +734,14 @@ size_t my_strlen_vptestnmb_unroll_2(const char * const s)
 #define UNROLL 2
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m512i tmp = _mm512_min_epu8(p[0], p[1]);
         const __mmask64 cmp = _mm512_testn_epi8_mask(tmp, tmp);
         if (!_ktestz_mask64_u8(cmp, cmp))
             break;
     }
 
-    return c * (512/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (512/8) * UNROLL);
 
 #undef UNROLL
@@ -774,8 +753,7 @@ size_t my_strlen_vptestnmb_unroll_4(const char * const s)
 #define UNROLL 4
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m512i tmp01 = _mm512_min_epu8(p[0], p[1]);
         const __m512i tmp23 = _mm512_min_epu8(p[2], p[3]);
         const __m512i tmp0123 = _mm512_min_epu8(tmp01, tmp23);
@@ -784,7 +762,7 @@ size_t my_strlen_vptestnmb_unroll_4(const char * const s)
             break;
     }
 
-    return c * (512/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (512/8) * UNROLL);
 
 #undef UNROLL
@@ -796,8 +774,7 @@ size_t my_strlen_vptestnmb_unroll_8(const char * const s)
 #define UNROLL 8
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m512i tmp01 = _mm512_min_epu8(p[0], p[1]);
         const __m512i tmp23 = _mm512_min_epu8(p[2], p[3]);
         const __m512i tmp45 = _mm512_min_epu8(p[4], p[5]);
@@ -810,7 +787,7 @@ size_t my_strlen_vptestnmb_unroll_8(const char * const s)
             break;
     }
 
-    return c * (512/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (512/8) * UNROLL);
 
 #undef UNROLL
@@ -824,8 +801,7 @@ size_t my_strlen_vptestnmb_unroll_16(const char * const s)
 #define UNROLL 16
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m512i tmp01 = _mm512_min_epu8(p[0], p[1]);
         const __m512i tmp23 = _mm512_min_epu8(p[2], p[3]);
         const __m512i tmp45 = _mm512_min_epu8(p[4], p[5]);
@@ -848,7 +824,7 @@ size_t my_strlen_vptestnmb_unroll_16(const char * const s)
             break;
     }
 
-    return c * (512/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (512/8) * UNROLL);
 
 #undef UNROLL
@@ -865,8 +841,7 @@ size_t my_strlen_vptestnmb_unroll_2_stream_both(const char * const s)
 #define UNROLL 2
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m512i v0 = _mm512_stream_load_si512(p + 0);
         const __m512i v1 = _mm512_stream_load_si512(p + 1);
         const __m512i tmp = _mm512_min_epu8(v0, v1);
@@ -875,7 +850,7 @@ size_t my_strlen_vptestnmb_unroll_2_stream_both(const char * const s)
             break;
     }
 
-    return c * (512/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (512/8) * UNROLL);
 
 #undef UNROLL
@@ -887,8 +862,7 @@ size_t my_strlen_vptestnmb_unroll_4_stream_both(const char * const s)
 #define UNROLL 4
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m512i v0 = _mm512_stream_load_si512(p + 0);
         const __m512i v1 = _mm512_stream_load_si512(p + 1);
         const __m512i v2 = _mm512_stream_load_si512(p + 2);
@@ -901,7 +875,7 @@ size_t my_strlen_vptestnmb_unroll_4_stream_both(const char * const s)
             break;
     }
 
-    return c * (512/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (512/8) * UNROLL);
 
 #undef UNROLL
@@ -913,8 +887,7 @@ size_t my_strlen_vptestnmb_unroll_8_stream_both(const char * const s)
 #define UNROLL 8
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m512i v0 = _mm512_stream_load_si512(p + 0);
         const __m512i v1 = _mm512_stream_load_si512(p + 1);
         const __m512i v2 = _mm512_stream_load_si512(p + 2);
@@ -935,7 +908,7 @@ size_t my_strlen_vptestnmb_unroll_8_stream_both(const char * const s)
             break;
     }
 
-    return c * (512/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (512/8) * UNROLL);
 
 #undef UNROLL
@@ -947,8 +920,7 @@ size_t my_strlen_vptestnmb_unroll_16_stream_both(const char * const s)
 #define UNROLL 16
 
     const __m512i *p = (__m512i*) __builtin_assume_aligned(s, PAGE_SIZE);
-    size_t c = 0;
-    for (; ; p += UNROLL, c++) {
+    for (; ; p += UNROLL) {
         const __m512i v0 = _mm512_stream_load_si512(p + 0);
         const __m512i v1 = _mm512_stream_load_si512(p + 1);
         const __m512i v2 = _mm512_stream_load_si512(p + 2);
@@ -987,7 +959,7 @@ size_t my_strlen_vptestnmb_unroll_16_stream_both(const char * const s)
             break;
     }
 
-    return c * (512/8) * UNROLL
+    return ((ptrdiff_t) p) - ((ptrdiff_t) s)
         + find_null_char((const char*) p, (512/8) * UNROLL);
 
 #undef UNROLL
