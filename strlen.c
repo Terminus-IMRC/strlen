@@ -168,7 +168,8 @@ size_t my_strlen_rep(const char * const s)
  * _mm*_testz_si*: Set ZF if logical AND of two inputs are all zero.
  * _mm*_movemask_epi8: Return r32 which corresponds to MSBs of each epi8.
  * _mm512_cmpeq_epi8_mask: Set bits in mask64 if two epi8 are the same.
- * _mm512_testn_epi8_mask: Same as above.
+ * _mm512_testn_epi8_mask: Set bits in mask64 if each epi8 of logical AND of two
+ *                         inputs is zero.
  * _ktestz_mask64_u8: Set ZF if logical AND of two inputs are all zero.
  */
 
